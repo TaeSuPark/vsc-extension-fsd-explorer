@@ -1,0 +1,68 @@
+{
+  "name": "fsd-creator",
+  "displayName": "fsd-creator",
+  "description": "FSD 아키텍처 구조를 쉽게 생성하는 도구",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "fsd-creator.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "fsd-creator.initFsd",
+        "title": "FSD: Initialize FSD Structure"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "fsd-creator",
+          "title": "FSD Creator",
+          "icon": "resources/fsd-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "fsd-creator": [
+        {
+          "id": "fsd-actions",
+          "name": "FSD Actions"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "fsd-actions",
+        "contents": "Initialize FSD Architecture structure in your project.\n[Initialize FSD](command:fsd-creator.initFsd)"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "pnpm run compile && pnpm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.97.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
+    "eslint": "^9.19.0",
+    "typescript": "^5.7.3",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1"
+  }
+}
