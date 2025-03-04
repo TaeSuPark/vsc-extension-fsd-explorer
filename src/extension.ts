@@ -182,6 +182,30 @@ async function createDomain(): Promise<void> {
         const indexContent = `// ${layer}/${domainName} 도메인의 진입점\n\nexport {};\n`
         await createFileIfNotExists(indexFilePath, indexContent)
 
+        // pages 레이어인 경우 추가 파일 생성
+        if (layer === "pages") {
+          // ui 폴더 생성
+          const uiPath = path.join(domainPath, "ui")
+          await createFolderIfNotExists(uiPath)
+
+          // 컴포넌트 파일 생성 (PascalCase로 변환)
+          const componentName = domainName
+            .split("-")
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join("")
+
+          const componentFilePath = path.join(uiPath, `${domainName}.tsx`)
+
+          // 컴포넌트 기본 내용 생성
+          const componentContent = `import React from 'react';\n\ninterface ${componentName}Props {\n  // 여기에 props 타입을 정의하세요\n}\n\nexport const ${componentName}: React.FC<${componentName}Props> = (props) => {\n  return (\n    <div>\n      <h1>${componentName} 페이지</h1>\n      {/* 여기에 컴포넌트 내용을 추가하세요 */}\n    </div>\n  );\n};\n`
+
+          await createFileIfNotExists(componentFilePath, componentContent)
+
+          // index.ts 파일 업데이트
+          const updatedIndexContent = `// ${layer}/${domainName} 도메인의 진입점\n\nexport { ${componentName} } from './ui/${domainName}';\n`
+          await fs.promises.writeFile(indexFilePath, updatedIndexContent)
+        }
+
         createdPaths.push(`${layer}/${domainName}`)
       } else {
         existingPaths.push(`${layer}/${domainName}`)
