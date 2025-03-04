@@ -24,6 +24,10 @@
       {
         "command": "fsd-creator.createDomain",
         "title": "FSD: Create Domain"
+      },
+      {
+        "command": "fsd-creator.setLanguage",
+        "title": "FSD: Set Language / 언어 설정"
       }
     ],
     "viewsContainers": {
@@ -46,9 +50,27 @@
     "viewsWelcome": [
       {
         "view": "fsd-actions",
-        "contents": "Initialize FSD Architecture structure in your project.\n[Initialize FSD](command:fsd-creator.initFsd)\n\nCreate a new domain across selected layers.\n[Create Domain](command:fsd-creator.createDomain)"
+        "contents": "Initialize FSD Architecture structure in your project.\n[Initialize FSD](command:fsd-creator.initFsd)\n\nCreate a new domain across selected layers.\n[Create Domain](command:fsd-creator.createDomain)\n\nChange language settings.\n[Set Language / 언어 설정](command:fsd-creator.setLanguage)"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "FSD Creator",
+      "properties": {
+        "fsd-creator.language": {
+          "type": "string",
+          "default": "en",
+          "enum": [
+            "en",
+            "ko"
+          ],
+          "enumDescriptions": [
+            "English",
+            "한국어"
+          ],
+          "description": "Language setting for FSD Creator / FSD Creator의 언어 설정"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
