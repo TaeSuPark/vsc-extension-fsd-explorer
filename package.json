@@ -20,6 +20,10 @@
       {
         "command": "fsd-creator.initFsd",
         "title": "FSD: Initialize FSD Structure"
+      },
+      {
+        "command": "fsd-creator.createDomain",
+        "title": "FSD: Create Domain"
       }
     ],
     "viewsContainers": {
@@ -42,7 +46,7 @@
     "viewsWelcome": [
       {
         "view": "fsd-actions",
-        "contents": "Initialize FSD Architecture structure in your project.\n[Initialize FSD](command:fsd-creator.initFsd)"
+        "contents": "Initialize FSD Architecture structure in your project.\n[Initialize FSD](command:fsd-creator.initFsd)\n\nCreate a new domain across selected layers.\n[Create Domain](command:fsd-creator.createDomain)"
       }
     ]
   },
