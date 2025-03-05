@@ -168,11 +168,27 @@ async function initializeFsdStructure(): Promise<void> {
     await createFolderIfNotExists(srcPath)
   }
 
+  // 설정에서 초기화할 폴더 가져오기
+  const config = vscode.workspace.getConfiguration("fsd-creator")
+  const initFolders = config.get<Record<string, boolean>>("initFolders") || {
+    entities: true,
+    features: true,
+    pages: true,
+    widgets: true,
+    shared: true,
+    app: true,
+  }
+
+  // 선택된 폴더만 필터링
+  const foldersToCreate = Object.entries(initFolders)
+    .filter(([_, enabled]) => enabled)
+    .map(([folder]) => folder)
+
   // FSD 폴더 생성
   const createdFolders: string[] = []
   const existingFolders: string[] = []
 
-  for (const folder of FSD_FOLDERS) {
+  for (const folder of foldersToCreate) {
     const folderPath = path.join(srcPath, folder)
 
     if (!fs.existsSync(folderPath)) {
@@ -238,8 +254,22 @@ async function createDomain(): Promise<void> {
     return
   }
 
-  // 레이어 선택 (다중 선택 가능) - shared 제외
-  const selectedLayers = await vscode.window.showQuickPick(DOMAIN_LAYERS, {
+  // 설정에서 도메인 생성 가능한 레이어 가져오기
+  const config = vscode.workspace.getConfiguration("fsd-creator")
+  const domainLayers = config.get<Record<string, boolean>>("domainLayers") || {
+    entities: true,
+    features: true,
+    pages: true,
+    widgets: true,
+  }
+
+  // 선택 가능한 레이어 필터링
+  const availableLayers = Object.entries(domainLayers)
+    .filter(([_, enabled]) => enabled)
+    .map(([layer]) => layer)
+
+  // 레이어 선택 (다중 선택 가능)
+  const selectedLayers = await vscode.window.showQuickPick(availableLayers, {
     placeHolder: getMessage("selectLayersPlaceholder"),
     canPickMany: true,
   })
@@ -249,40 +279,38 @@ async function createDomain(): Promise<void> {
     return
   }
 
-  // 선택된 레이어에 도메인 폴더 및 index.ts 파일 생성
-  const createdPaths: string[] = []
-  const existingPaths: string[] = []
-  const errorPaths: string[] = []
+  // 레이어 구조 설정 가져오기
+  const layerStructure = config.get("layerStructure") || {
+    entities: { model: true, api: true, ui: false },
+    features: { model: true, api: true, ui: true },
+    pages: { model: true, api: false, ui: true, createComponent: true },
+    widgets: { model: true, api: false, ui: true },
+  }
+
+  // 도메인 생성
+  const createdDomains: string[] = []
+  const existingDomains: string[] = []
+  const errorDomains: string[] = []
 
   for (const layer of selectedLayers) {
-    const layerPath = path.join(srcPath, layer)
-
-    // 레이어 폴더가 없으면 건너뛰기
-    if (!fs.existsSync(layerPath)) {
-      errorPaths.push(`${layer}/${domainName}`)
-      continue
-    }
-
-    const domainPath = path.join(layerPath, domainName)
-    const indexFilePath = path.join(domainPath, "index.ts")
-
     try {
+      const domainPath = path.join(srcPath, layer, domainName)
+      const indexFilePath = path.join(domainPath, "index.ts")
+
+      // 도메인 폴더가 이미 존재하는지 확인
+      if (fs.existsSync(domainPath)) {
+        existingDomains.push(`${layer}/${domainName}`)
+        continue
+      }
+
       // 도메인 폴더 생성
-      if (!fs.existsSync(domainPath)) {
-        await createFolderIfNotExists(domainPath)
+      await createFolderIfNotExists(domainPath)
 
-        // index.ts 파일 생성
-        const indexContent = `// ${getMessage(
-          "domainEntryPoint"
-        )} ${layer}/${domainName}
+      // 레이어별 구조 설정 가져오기
+      const layerConfig = (layerStructure as any)[layer] || { model: true }
 
-export {};\n`
-        await createFileIfNotExists(indexFilePath, indexContent)
-
-        // 공통 폴더 생성 (lib, model)
-        await createFolderIfNotExists(path.join(domainPath, "lib"))
-
-        // model 폴더 및 interface.ts 생성
+      // model 폴더 및 interface.ts 생성
+      if (layerConfig.model) {
         const modelPath = path.join(domainPath, "model")
         await createFolderIfNotExists(modelPath)
 
@@ -307,83 +335,303 @@ export {};\n`
           path.join(modelPath, "interface.ts"),
           interfaceContent
         )
-
-        // index.ts 파일에 인터페이스 export 추가
-        const updatedIndexContent = `// ${getMessage(
-          "domainEntryPoint"
-        )} ${layer}/${domainName}\n\nexport type { ${interfaceName} } from './model/interface';\nexport {};\n`
-        await fs.promises.writeFile(indexFilePath, updatedIndexContent)
-
-        // api 폴더 생성 (entities, features 레이어만)
-        if (layer === "entities" || layer === "features") {
-          await createFolderIfNotExists(path.join(domainPath, "api"))
-        }
-
-        // ui 폴더 생성 (entities 레이어 제외)
-        if (layer !== "entities") {
-          await createFolderIfNotExists(path.join(domainPath, "ui"))
-        }
-
-        // pages 레이어인 경우 추가 파일 생성
-        if (layer === "pages") {
-          // ui 폴더는 이미 생성됨
-          const uiPath = path.join(domainPath, "ui")
-
-          // 컴포넌트 파일 생성 (PascalCase로 변환)
-          const componentName = domainName
-            .split("-")
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-            .join("")
-
-          const componentFilePath = path.join(uiPath, `${domainName}.tsx`)
-
-          // 컴포넌트 기본 내용 생성
-          const componentContent = `\nexport const ${componentName} = () => {\n  return (\n    <>\n      <h1>${componentName} ${getMessage(
-            "componentPage"
-          )}</h1>\n      {/* ${getMessage(
-            "addComponentContent"
-          )} */}\n    </>\n  );\n};\n`
-
-          await createFileIfNotExists(componentFilePath, componentContent)
-
-          // index.ts 파일 업데이트
-          const updatedIndexContent = `// ${getMessage(
-            "domainEntryPoint"
-          )} ${layer}/${domainName}\n\nexport { ${componentName} } from './ui/${domainName}';\nexport type { ${interfaceName} } from './model/interface';\nexport {};\n`
-          await fs.promises.writeFile(indexFilePath, updatedIndexContent)
-        }
-
-        createdPaths.push(`${layer}/${domainName}`)
-      } else {
-        existingPaths.push(`${layer}/${domainName}`)
       }
+
+      // api 폴더 생성
+      if (layerConfig.api) {
+        const apiPath = path.join(domainPath, "api")
+        await createFolderIfNotExists(apiPath)
+      }
+
+      // ui 폴더 생성
+      if (layerConfig.ui) {
+        const uiPath = path.join(domainPath, "ui")
+        await createFolderIfNotExists(uiPath)
+      }
+
+      // pages 레이어에서 컴포넌트 생성
+      if (layer === "pages" && layerConfig.createComponent) {
+        // 컴포넌트 이름 생성 (PascalCase)
+        const componentName = domainName
+          .split("-")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join("")
+
+        // 컴포넌트 파일 경로
+        const componentFilePath = path.join(domainPath, `${componentName}.tsx`)
+
+        // 컴포넌트 기본 내용 생성
+        const componentContent = `import React from 'react';\n\nexport const ${componentName} = () => {\n  return (\n    <>\n      <h1>${componentName} ${getMessage(
+          "componentPage"
+        )}</h1>\n      {/* ${getMessage(
+          "addComponentContent"
+        )} */}\n    </>\n  );\n};\n`
+
+        await createFileIfNotExists(componentFilePath, componentContent)
+      }
+
+      // index.ts 파일 생성
+      const indexContent = `// ${getMessage(
+        "domainEntryPoint"
+      )} ${layer}/${domainName}\n\nexport {};\n`
+      await createFileIfNotExists(indexFilePath, indexContent)
+
+      createdDomains.push(`${layer}/${domainName}`)
     } catch (error) {
-      errorPaths.push(`${layer}/${domainName}`)
-      console.error(`Error creating domain in ${layer}:`, error)
+      errorDomains.push(`${layer}/${domainName}`)
+      console.error(`Error creating domain ${layer}/${domainName}:`, error)
     }
   }
 
   // 결과 메시지 표시
-  if (createdPaths.length > 0) {
+  if (createdDomains.length > 0) {
     vscode.window.showInformationMessage(
-      `${getMessage("domainsCreated")}${createdPaths.join(", ")}`
+      `${getMessage("domainsCreated")}${createdDomains.join(", ")}`
     )
   }
 
-  if (existingPaths.length > 0) {
+  if (existingDomains.length > 0) {
     vscode.window.showInformationMessage(
-      `${getMessage("domainsExist")}${existingPaths.join(", ")}`
+      `${getMessage("domainsExist")}${existingDomains.join(", ")}`
     )
   }
 
-  if (errorPaths.length > 0) {
+  if (errorDomains.length > 0) {
     vscode.window.showErrorMessage(
-      `${getMessage("domainsError")}${errorPaths.join(", ")}`
+      `${getMessage("domainsError")}${errorDomains.join(", ")}`
     )
   }
 
   // 탐색기 새로고침
   vscode.commands.executeCommand(getMessage("refreshExplorer"))
+}
+
+// HTML 템플릿 로드 및 변수 대체 함수
+async function loadHtmlTemplate(
+  context: vscode.ExtensionContext,
+  webview: vscode.Webview,
+  templatePath: string,
+  variables: Record<string, string | boolean | Record<string, any>>
+): Promise<string> {
+  // 템플릿 파일 경로
+  const templateUri = vscode.Uri.joinPath(context.extensionUri, templatePath)
+
+  try {
+    // 파일 내용 읽기
+    const templateContent = await fs.promises.readFile(
+      templateUri.fsPath,
+      "utf-8"
+    )
+
+    // 변수 대체
+    let processedContent = templateContent
+
+    // 모든 변수를 문자열로 변환하여 대체
+    for (const [key, value] of Object.entries(variables)) {
+      // 객체인 경우 JSON 문자열로 변환
+      if (typeof value === "object" && value !== null) {
+        const jsonStr = JSON.stringify(value)
+        // 객체 속성에 접근하는 표현식 처리 (예: ${initFolders.entities})
+        const regex = new RegExp(`\\$\\{${key}\\.([\\w\\.]+)\\}`, "g")
+        processedContent = processedContent.replace(regex, (match, prop) => {
+          // 중첩 속성 처리 (예: layerStructure.pages.createComponent)
+          const props = prop.split(".")
+          let result = value as any
+
+          for (const p of props) {
+            if (result && typeof result === "object") {
+              result = result[p]
+            } else {
+              result = undefined
+              break
+            }
+          }
+
+          return result ? "checked" : ""
+        })
+
+        // 객체 자체를 대체 (예: ${initFolders})
+        processedContent = processedContent.replace(`\${${key}}`, jsonStr)
+      } else {
+        // 일반 변수 대체
+        processedContent = processedContent.replace(`\${${key}}`, String(value))
+      }
+    }
+
+    return processedContent
+  } catch (error) {
+    console.error("Error loading HTML template:", error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return `<html><body><h1>Error loading settings</h1><p>${errorMessage}</p></body></html>`
+  }
+}
+
+// 웹뷰 HTML 콘텐츠 생성 함수 수정
+async function getSettingsWebviewContent(
+  context: vscode.ExtensionContext,
+  webview: vscode.Webview
+): Promise<string> {
+  // 미디어 파일 경로 설정
+  const styleUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, "media", "settings.css")
+  )
+  const scriptUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, "media", "settings.js")
+  )
+
+  // 현재 설정 가져오기
+  const config = vscode.workspace.getConfiguration("fsd-creator")
+
+  // 타입 정의
+  interface FolderSettings {
+    entities: boolean
+    features: boolean
+    pages: boolean
+    widgets: boolean
+    shared: boolean
+    app: boolean
+  }
+
+  interface DomainLayerSettings {
+    entities: boolean
+    features: boolean
+    pages: boolean
+    widgets: boolean
+  }
+
+  interface LayerStructure {
+    model: boolean
+    api: boolean
+    ui: boolean
+    lib: boolean
+  }
+
+  interface PageLayerStructure extends LayerStructure {
+    createComponent: boolean
+  }
+
+  interface LayerStructureSettings {
+    entities: LayerStructure
+    features: LayerStructure
+    pages: PageLayerStructure
+    widgets: LayerStructure
+  }
+
+  // 기본값 정의
+  const defaultInitFolders: FolderSettings = {
+    entities: true,
+    features: true,
+    pages: true,
+    widgets: true,
+    shared: true,
+    app: true,
+  }
+
+  const defaultDomainLayers: DomainLayerSettings = {
+    entities: true,
+    features: true,
+    pages: true,
+    widgets: true,
+  }
+
+  const defaultLayerStructure: LayerStructureSettings = {
+    entities: { model: true, api: true, ui: false, lib: false },
+    features: { model: true, api: true, ui: true, lib: false },
+    pages: {
+      model: true,
+      api: false,
+      ui: true,
+      lib: false,
+      createComponent: true,
+    },
+    widgets: { model: true, api: false, ui: true, lib: false },
+  }
+
+  // 설정 가져오기 (기본값 사용)
+  const initFolders =
+    config.get<FolderSettings>("initFolders") || defaultInitFolders
+  const domainLayers =
+    config.get<DomainLayerSettings>("domainLayers") || defaultDomainLayers
+  const layerStructure =
+    config.get<LayerStructureSettings>("layerStructure") ||
+    defaultLayerStructure
+  const language = config.get<string>("language") || "en"
+
+  // 템플릿 변수
+  const templateVariables = {
+    styleUri: styleUri.toString(),
+    scriptUri: scriptUri.toString(),
+    language,
+    initFolders,
+    domainLayers,
+    layerStructure,
+  }
+
+  // HTML 템플릿 로드 및 변수 대체
+  return await loadHtmlTemplate(
+    context,
+    webview,
+    "media/settings.html",
+    templateVariables
+  )
+}
+
+// 설정 웹뷰 패널 생성 함수 수정
+async function createSettingsWebview(context: vscode.ExtensionContext) {
+  // 웹뷰 패널 생성
+  const panel = vscode.window.createWebviewPanel(
+    "fsdSettings", // 고유 ID
+    "FSD Creator Settings", // 패널 제목
+    vscode.ViewColumn.One, // 표시할 열
+    {
+      enableScripts: true, // 스크립트 활성화
+      retainContextWhenHidden: true, // 숨겨져 있을 때 컨텍스트 유지
+      localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, "media")],
+    }
+  )
+
+  // 웹뷰 HTML 설정 (비동기 함수로 변경)
+  panel.webview.html = await getSettingsWebviewContent(context, panel.webview)
+
+  // 웹뷰에서 메시지 수신
+  panel.webview.onDidReceiveMessage(
+    async (message) => {
+      switch (message.command) {
+        case "saveSettings":
+          // 설정 저장 로직
+          const config = vscode.workspace.getConfiguration("fsd-creator")
+
+          // 각 설정 항목 저장
+          await config.update(
+            "language",
+            message.settings.language,
+            vscode.ConfigurationTarget.Global
+          )
+          await config.update(
+            "initFolders",
+            message.settings.initFolders,
+            vscode.ConfigurationTarget.Global
+          )
+          await config.update(
+            "domainLayers",
+            message.settings.domainLayers,
+            vscode.ConfigurationTarget.Global
+          )
+          await config.update(
+            "layerStructure",
+            message.settings.layerStructure,
+            vscode.ConfigurationTarget.Global
+          )
+
+          vscode.window.showInformationMessage("FSD Creator settings saved!")
+          break
+      }
+    },
+    undefined,
+    context.subscriptions
+  )
+
+  return panel
 }
 
 // This method is called when your extension is activated
@@ -445,11 +693,20 @@ export function activate(context: vscode.ExtensionContext) {
     }
   )
 
+  // 설정 명령어 등록
+  const openSettingsDisposable = vscode.commands.registerCommand(
+    "fsd-creator.openSettings",
+    async () => {
+      await createSettingsWebview(context)
+    }
+  )
+
   context.subscriptions.push(
     helloWorldDisposable,
     initFsdDisposable,
     createDomainDisposable,
-    setLanguageDisposable
+    setLanguageDisposable,
+    openSettingsDisposable
   )
 }
 
