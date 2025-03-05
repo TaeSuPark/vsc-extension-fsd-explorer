@@ -28,6 +28,10 @@
       {
         "command": "fsd-creator.setLanguage",
         "title": "FSD: Set Language / 언어 설정"
+      },
+      {
+        "command": "fsd-creator.openSettings",
+        "title": "FSD: Open Settings"
       }
     ],
     "viewsContainers": {
@@ -50,7 +54,7 @@
     "viewsWelcome": [
       {
         "view": "fsd-actions",
-        "contents": "Initialize FSD Architecture structure in your project.\n[Initialize FSD](command:fsd-creator.initFsd)\n\nCreate a new domain across selected layers.\n[Create Domain](command:fsd-creator.createDomain)\n\nChange language settings.\n[Set Language / 언어 설정](command:fsd-creator.setLanguage)"
+        "contents": "Initialize FSD Architecture structure in your project.\n[Initialize FSD](command:fsd-creator.initFsd)\n\nCreate a new domain across selected layers.\n[Create Domain](command:fsd-creator.createDomain)\n\n---\n\n[Open Settings](command:fsd-creator.openSettings)\n[Set Language / 언어 설정](command:fsd-creator.setLanguage)"
       }
     ],
     "configuration": {
@@ -68,17 +72,70 @@
             "한국어"
           ],
           "description": "Language setting for FSD Creator / FSD Creator의 언어 설정"
+        },
+        "fsd-creator.initFolders": {
+          "type": "object",
+          "default": {
+            "entities": true,
+            "features": true,
+            "pages": true,
+            "widgets": true,
+            "shared": true,
+            "app": true
+          },
+          "description": "Folders to create when initializing FSD structure"
+        },
+        "fsd-creator.domainLayers": {
+          "type": "object",
+          "default": {
+            "entities": true,
+            "features": true,
+            "pages": true,
+            "widgets": true
+          },
+          "description": "Layers available for domain creation"
+        },
+        "fsd-creator.layerStructure": {
+          "type": "object",
+          "default": {
+            "entities": {
+              "model": true,
+              "api": true,
+              "ui": false,
+              "lib": false
+            },
+            "features": {
+              "model": true,
+              "api": true,
+              "ui": true,
+              "lib": false
+            },
+            "pages": {
+              "model": true,
+              "api": false,
+              "ui": true,
+              "lib": false,
+              "createComponent": true
+            },
+            "widgets": {
+              "model": true,
+              "api": false,
+              "ui": true,
+              "lib": false
+            }
+          },
+          "description": "Default folder structure for each layer"
         }
       }
     }
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run compile",
+    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "pnpm run compile && pnpm run lint",
-    "lint": "eslint src",
-    "test": "vscode-test"
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
     "@types/vscode": "^1.97.0",
@@ -90,5 +147,9 @@
     "typescript": "^5.7.3",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1"
-  }
+  },
+  "files": [
+    "out/**/*",
+    "media/**/*"
+  ]
 }
