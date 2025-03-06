@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${language}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FSD Creator Settings</title>
+  <title>${uiMessages.settingsTitle}</title>
   <link rel="stylesheet" href="${styleUri}">
 </head>
 <body>
   <div class="container">
-    <h1>FSD Creator Settings</h1>
+    <h1>${uiMessages.settingsTitle}</h1>
     
     <section class="setting-section">
-      <h2>General Settings</h2>
+      <h2>${uiMessages.generalSettings}</h2>
       <div class="form-group">
-        <label for="language">Language:</label>
+        <label for="language">${uiMessages.language}:</label>
         <select id="language">
           <option value="en" ${language === "en" ? "selected" : ""}>English</option>
           <option value="ko" ${language === "ko" ? "selected" : ""}>한국어</option>
@@ -22,9 +22,9 @@
     </section>
 
     <section class="setting-section">
-      <h2>FSD Initialization</h2>
+      <h2>${uiMessages.fsdInitialization}</h2>
       <div class="form-group">
-        <label>Folders to create when initializing:</label>
+        <label>${uiMessages.foldersToCreate}:</label>
         <div class="checkbox-group">
           <label><input type="checkbox" id="init-entities" ${initFolders.entities ? "checked" : ""}> entities</label>
           <label><input type="checkbox" id="init-features" ${initFolders.features ? "checked" : ""}> features</label>
@@ -37,9 +37,9 @@
     </section>
 
     <section class="setting-section">
-      <h2>Domain Creation</h2>
+      <h2>${uiMessages.domainCreation}</h2>
       <div class="form-group">
-        <label>Layers available for domain creation:</label>
+        <label>${uiMessages.layersAvailable}:</label>
         <div class="checkbox-group">
           <label><input type="checkbox" id="domain-entities" ${domainLayers.entities ? "checked" : ""}> entities</label>
           <label><input type="checkbox" id="domain-features" ${domainLayers.features ? "checked" : ""}> features</label>
@@ -50,7 +50,7 @@
     </section>
 
     <section class="setting-section">
-      <h2>Layer Structure</h2>
+      <h2>${uiMessages.layerStructure}</h2>
       
       <div class="layer-settings">
         <h3>entities</h3>
@@ -79,7 +79,7 @@
           <label><input type="checkbox" id="pages-api" ${layerStructure.pages.api ? "checked" : ""}> api</label>
           <label><input type="checkbox" id="pages-ui" ${layerStructure.pages.ui ? "checked" : ""}> ui</label>
           <label><input type="checkbox" id="pages-lib" ${layerStructure.pages.lib ? "checked" : ""}> lib</label>
-          <label><input type="checkbox" id="pages-component" ${layerStructure.pages.createComponent ? "checked" : ""}> create component</label>
+          <label><input type="checkbox" id="pages-component" ${layerStructure.pages.createComponent ? "checked" : ""}> ${uiMessages.createComponent}</label>
         </div>
       </div>
 
@@ -95,8 +95,8 @@
     </section>
 
     <div class="button-group">
-      <button id="saveButton">Save Settings</button>
-      <button id="resetButton">Reset to Defaults</button>
+      <button id="saveButton">${uiMessages.saveSettings}</button>
+      <button id="resetButton">${uiMessages.resetToDefaults}</button>
     </div>
   </div>
   <script src="${scriptUri}"></script>

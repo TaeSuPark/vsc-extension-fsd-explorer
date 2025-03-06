@@ -18,16 +18,12 @@
         "title": "Hello World"
       },
       {
-        "command": "fsd-creator.initFsd",
+        "command": "fsd-creator.initializeFsd",
         "title": "FSD: Initialize FSD Structure"
       },
       {
         "command": "fsd-creator.createDomain",
         "title": "FSD: Create Domain"
-      },
-      {
-        "command": "fsd-creator.setLanguage",
-        "title": "FSD: Set Language / 언어 설정"
       },
       {
         "command": "fsd-creator.openSettings",
@@ -54,7 +50,7 @@
     "viewsWelcome": [
       {
         "view": "fsd-actions",
-        "contents": "Initialize FSD Architecture structure in your project.\n[Initialize FSD](command:fsd-creator.initFsd)\n\nCreate a new domain across selected layers.\n[Create Domain](command:fsd-creator.createDomain)\n\n---\n\n[Open Settings](command:fsd-creator.openSettings)\n[Set Language / 언어 설정](command:fsd-creator.setLanguage)"
+        "contents": "%fsd-creator.welcome%"
       }
     ],
     "configuration": {
@@ -151,5 +147,11 @@
   "files": [
     "out/**/*",
     "media/**/*"
+  ],
+  "l10n": [
+    {
+      "id": "fsd-creator.welcome",
+      "path": "./package.nls.{locale}.json"
+    }
   ]
 }

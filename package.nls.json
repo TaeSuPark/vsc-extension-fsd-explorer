@@ -1,0 +1,3 @@
+{
+  "fsd-creator.welcome": "Initialize FSD Architecture structure in your project.\n[Initialize FSD](command:fsd-creator.initializeFsd)\n\nCreate a new domain across selected layers.\n[Create Domain](command:fsd-creator.createDomain)\n\n---\n\n[Open Settings](command:fsd-creator.openSettings)"
+}

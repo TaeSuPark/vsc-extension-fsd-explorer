@@ -41,6 +41,27 @@ const messages = {
     addPropsHere: "Add interface properties here",
     componentPage: "page",
     addComponentContent: "Add component content here",
+
+    // 설정 UI 관련
+    settingsTitle: "FSD Creator Settings",
+    generalSettings: "General Settings",
+    language: "Language",
+    fsdInitialization: "FSD Initialization",
+    foldersToCreate: "Folders to create when initializing",
+    domainCreation: "Domain Creation",
+    layersAvailable: "Layers available for domain creation",
+    layerStructure: "Layer Structure",
+    createComponent: "create component",
+    saveSettings: "Save Settings",
+    resetToDefaults: "Reset to Defaults",
+    settingsSaved: "FSD Creator settings saved!",
+
+    // 사이드바 관련
+    initializeFsd: "Initialize FSD Architecture structure in your project.",
+    initializeFsdButton: "Initialize FSD",
+    createDomainDesc: "Create a new domain across selected layers.",
+    createDomainButton: "Create Domain",
+    openSettingsButton: "Open Settings",
   },
   ko: {
     // 일반 메시지
@@ -76,6 +97,27 @@ const messages = {
     addPropsHere: "여기에 인터페이스 속성을 정의하세요",
     componentPage: "페이지",
     addComponentContent: "여기에 컴포넌트 내용을 추가하세요",
+
+    // 설정 UI 관련
+    settingsTitle: "FSD Creator 설정",
+    generalSettings: "일반 설정",
+    language: "언어",
+    fsdInitialization: "FSD 초기화",
+    foldersToCreate: "초기화 시 생성할 폴더",
+    domainCreation: "도메인 생성",
+    layersAvailable: "도메인 생성에 사용할 레이어",
+    layerStructure: "레이어 구조",
+    createComponent: "컴포넌트 생성",
+    saveSettings: "설정 저장",
+    resetToDefaults: "기본값으로 재설정",
+    settingsSaved: "FSD Creator 설정이 저장되었습니다!",
+
+    // 사이드바 관련
+    initializeFsd: "프로젝트에 FSD 아키텍처 구조를 초기화합니다.",
+    initializeFsdButton: "FSD 초기화",
+    createDomainDesc: "선택한 레이어에 새 도메인을 생성합니다.",
+    createDomainButton: "도메인 생성",
+    openSettingsButton: "설정 열기",
   },
 }
 
@@ -411,62 +453,61 @@ async function loadHtmlTemplate(
   context: vscode.ExtensionContext,
   webview: vscode.Webview,
   templatePath: string,
-  variables: Record<string, string | boolean | Record<string, any>>
+  variables: Record<string, any>
 ): Promise<string> {
   // 템플릿 파일 경로
   const templateUri = vscode.Uri.joinPath(context.extensionUri, templatePath)
 
   try {
-    // 파일 내용 읽기
+    // 파일 읽기
     const templateContent = await fs.promises.readFile(
       templateUri.fsPath,
-      "utf-8"
+      "utf8"
     )
 
     // 변수 대체
     let processedContent = templateContent
 
-    // 모든 변수를 문자열로 변환하여 대체
-    for (const [key, value] of Object.entries(variables)) {
-      // 객체인 경우 JSON 문자열로 변환
-      if (typeof value === "object" && value !== null) {
-        const jsonStr = JSON.stringify(value)
-        // 객체 속성에 접근하는 표현식 처리 (예: ${initFolders.entities})
-        const regex = new RegExp(`\\$\\{${key}\\.([\\w\\.]+)\\}`, "g")
-        processedContent = processedContent.replace(regex, (match, prop) => {
-          // 중첩 속성 처리 (예: layerStructure.pages.createComponent)
-          const props = prop.split(".")
-          let result = value as any
+    // 정규식을 사용하여 ${variable} 형태의 모든 변수 찾기
+    const variableRegex = /\${([^}]+)}/g
 
-          for (const p of props) {
-            if (result && typeof result === "object") {
-              result = result[p]
-            } else {
-              result = undefined
-              break
+    // 변수 대체
+    processedContent = processedContent.replace(
+      variableRegex,
+      (match, varName) => {
+        // 점(.)을 포함하는 변수 처리 (예: uiMessages.settingsTitle)
+        if (varName.includes(".")) {
+          const parts = varName.split(".")
+          let value = variables
+
+          for (const part of parts) {
+            if (value === undefined || value === null) {
+              console.warn(`Variable part ${part} in ${varName} is undefined`)
+              return match // 값이 없으면 원래 문자열 반환
             }
+            value = value[part]
           }
 
-          return result ? "checked" : ""
-        })
+          return value !== undefined ? String(value) : match
+        }
 
-        // 객체 자체를 대체 (예: ${initFolders})
-        processedContent = processedContent.replace(`\${${key}}`, jsonStr)
-      } else {
-        // 일반 변수 대체
-        processedContent = processedContent.replace(`\${${key}}`, String(value))
+        // 일반 변수 처리
+        const value = variables[varName]
+        if (value === undefined) {
+          console.warn(`Variable ${varName} is undefined`)
+        }
+        return value !== undefined ? String(value) : match
       }
-    }
+    )
 
     return processedContent
   } catch (error) {
-    console.error("Error loading HTML template:", error)
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    return `<html><body><h1>Error loading settings</h1><p>${errorMessage}</p></body></html>`
+    console.error(`Error loading template ${templatePath}:`, error)
+    return `<html><body><h1>Error loading template</h1><p>${error}</p></body></html>`
   }
 }
 
-// 웹뷰 HTML 콘텐츠 생성 함수 수정
+// 설정 웹뷰 HTML 콘텐츠 생성 함수 수정
 async function getSettingsWebviewContent(
   context: vscode.ExtensionContext,
   webview: vscode.Webview
@@ -482,43 +523,14 @@ async function getSettingsWebviewContent(
   // 현재 설정 가져오기
   const config = vscode.workspace.getConfiguration("fsd-creator")
 
-  // 타입 정의
-  interface FolderSettings {
-    entities: boolean
-    features: boolean
-    pages: boolean
-    widgets: boolean
-    shared: boolean
-    app: boolean
-  }
+  // 언어 설정 가져오기
+  const language = config.get<string>("language") || "en"
 
-  interface DomainLayerSettings {
-    entities: boolean
-    features: boolean
-    pages: boolean
-    widgets: boolean
-  }
+  // UI 메시지 가져오기
+  const uiMessages = messages[language as keyof typeof messages]
 
-  interface LayerStructure {
-    model: boolean
-    api: boolean
-    ui: boolean
-    lib: boolean
-  }
-
-  interface PageLayerStructure extends LayerStructure {
-    createComponent: boolean
-  }
-
-  interface LayerStructureSettings {
-    entities: LayerStructure
-    features: LayerStructure
-    pages: PageLayerStructure
-    widgets: LayerStructure
-  }
-
-  // 기본값 정의
-  const defaultInitFolders: FolderSettings = {
+  // 설정 가져오기 (기본값 사용)
+  const initFolders = config.get("initFolders") || {
     entities: true,
     features: true,
     pages: true,
@@ -527,14 +539,14 @@ async function getSettingsWebviewContent(
     app: true,
   }
 
-  const defaultDomainLayers: DomainLayerSettings = {
+  const domainLayers = config.get("domainLayers") || {
     entities: true,
     features: true,
     pages: true,
     widgets: true,
   }
 
-  const defaultLayerStructure: LayerStructureSettings = {
+  const layerStructure = config.get("layerStructure") || {
     entities: { model: true, api: true, ui: false, lib: false },
     features: { model: true, api: true, ui: true, lib: false },
     pages: {
@@ -547,21 +559,20 @@ async function getSettingsWebviewContent(
     widgets: { model: true, api: false, ui: true, lib: false },
   }
 
-  // 설정 가져오기 (기본값 사용)
-  const initFolders =
-    config.get<FolderSettings>("initFolders") || defaultInitFolders
-  const domainLayers =
-    config.get<DomainLayerSettings>("domainLayers") || defaultDomainLayers
-  const layerStructure =
-    config.get<LayerStructureSettings>("layerStructure") ||
-    defaultLayerStructure
-  const language = config.get<string>("language") || "en"
+  // 디버깅을 위해 콘솔에 현재 설정값 출력
+  console.log("Current settings:", {
+    language,
+    initFolders,
+    domainLayers,
+    layerStructure,
+  })
 
   // 템플릿 변수
   const templateVariables = {
     styleUri: styleUri.toString(),
     scriptUri: scriptUri.toString(),
     language,
+    uiMessages,
     initFolders,
     domainLayers,
     layerStructure,
@@ -590,18 +601,16 @@ async function createSettingsWebview(context: vscode.ExtensionContext) {
     }
   )
 
-  // 웹뷰 HTML 설정 (비동기 함수로 변경)
+  // 웹뷰 HTML 콘텐츠 설정
   panel.webview.html = await getSettingsWebviewContent(context, panel.webview)
 
-  // 웹뷰에서 메시지 수신
+  // 웹뷰에서 메시지 수신 처리
   panel.webview.onDidReceiveMessage(
     async (message) => {
       switch (message.command) {
         case "saveSettings":
-          // 설정 저장 로직
+          // 설정 저장
           const config = vscode.workspace.getConfiguration("fsd-creator")
-
-          // 각 설정 항목 저장
           await config.update(
             "language",
             message.settings.language,
@@ -623,7 +632,16 @@ async function createSettingsWebview(context: vscode.ExtensionContext) {
             vscode.ConfigurationTarget.Global
           )
 
-          vscode.window.showInformationMessage("FSD Creator settings saved!")
+          // 현재 언어 설정 가져오기
+          const language = config.get<string>("language") || "en"
+          // 언어에 맞는 메시지 가져오기
+          const uiMessages = messages[language as keyof typeof messages]
+
+          // 설정 저장 메시지 표시
+          vscode.window.showInformationMessage(uiMessages.settingsSaved)
+
+          // 웹뷰 패널 닫기
+          panel.dispose()
           break
       }
     },
@@ -638,24 +656,19 @@ async function createSettingsWebview(context: vscode.ExtensionContext) {
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
   console.log(getMessage("extensionActive"))
 
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
+  // 기본 명령어 등록
   const helloWorldDisposable = vscode.commands.registerCommand(
     "fsd-creator.helloWorld",
     () => {
-      // The code you place here will be executed every time your command is executed
-      // Display a message box to the user
-      vscode.window.showInformationMessage("Hello World from fsd creator!")
+      vscode.window.showInformationMessage(getMessage("extensionActive"))
     }
   )
 
-  // FSD 초기화 명령어 등록
+  // FSD 구조 초기화 명령어 등록
   const initFsdDisposable = vscode.commands.registerCommand(
-    "fsd-creator.initFsd",
+    "fsd-creator.initializeFsd",
     initializeFsdStructure
   )
 
@@ -663,34 +676,6 @@ export function activate(context: vscode.ExtensionContext) {
   const createDomainDisposable = vscode.commands.registerCommand(
     "fsd-creator.createDomain",
     createDomain
-  )
-
-  // 언어 설정 명령어 등록
-  const setLanguageDisposable = vscode.commands.registerCommand(
-    "fsd-creator.setLanguage",
-    async () => {
-      const language = await vscode.window.showQuickPick(
-        ["English", "한국어"],
-        {
-          placeHolder: "Select language / 언어를 선택하세요",
-        }
-      )
-
-      if (language) {
-        const config = vscode.workspace.getConfiguration("fsd-creator")
-        await config.update(
-          "language",
-          language === "한국어" ? "ko" : "en",
-          vscode.ConfigurationTarget.Global
-        )
-
-        const message =
-          language === "한국어"
-            ? "언어가 한국어로 설정되었습니다."
-            : "Language set to English."
-        vscode.window.showInformationMessage(message)
-      }
-    }
   )
 
   // 설정 명령어 등록
@@ -705,7 +690,6 @@ export function activate(context: vscode.ExtensionContext) {
     helloWorldDisposable,
     initFsdDisposable,
     createDomainDisposable,
-    setLanguageDisposable,
     openSettingsDisposable
   )
 }

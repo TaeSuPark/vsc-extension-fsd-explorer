@@ -1,0 +1,3 @@
+{
+  "fsd-creator.welcome": "프로젝트에 FSD 아키텍처 구조를 초기화합니다.\n[FSD 초기화](command:fsd-creator.initializeFsd)\n\n선택한 레이어에 새 도메인을 생성합니다.\n[도메인 생성](command:fsd-creator.createDomain)\n\n---\n\n[설정 열기](command:fsd-creator.openSettings)"
+}
