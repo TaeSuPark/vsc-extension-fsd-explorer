@@ -529,8 +529,43 @@ async function getSettingsWebviewContent(
   // UI 메시지 가져오기
   const uiMessages = messages[language as keyof typeof messages]
 
-  // 설정 가져오기 (기본값 사용)
-  const initFolders = config.get("initFolders") || {
+  // 타입 정의
+  interface FolderSettings {
+    entities: boolean
+    features: boolean
+    pages: boolean
+    widgets: boolean
+    shared: boolean
+    app: boolean
+  }
+
+  interface DomainLayerSettings {
+    entities: boolean
+    features: boolean
+    pages: boolean
+    widgets: boolean
+  }
+
+  interface LayerStructure {
+    model: boolean
+    api: boolean
+    ui: boolean
+    lib: boolean
+  }
+
+  interface PageLayerStructure extends LayerStructure {
+    createComponent: boolean
+  }
+
+  interface LayerStructureSettings {
+    entities: LayerStructure
+    features: LayerStructure
+    pages: PageLayerStructure
+    widgets: LayerStructure
+  }
+
+  // 기본값 정의
+  const defaultInitFolders: FolderSettings = {
     entities: true,
     features: true,
     pages: true,
@@ -539,14 +574,14 @@ async function getSettingsWebviewContent(
     app: true,
   }
 
-  const domainLayers = config.get("domainLayers") || {
+  const defaultDomainLayers: DomainLayerSettings = {
     entities: true,
     features: true,
     pages: true,
     widgets: true,
   }
 
-  const layerStructure = config.get("layerStructure") || {
+  const defaultLayerStructure: LayerStructureSettings = {
     entities: { model: true, api: true, ui: false, lib: false },
     features: { model: true, api: true, ui: true, lib: false },
     pages: {
@@ -558,6 +593,94 @@ async function getSettingsWebviewContent(
     },
     widgets: { model: true, api: false, ui: true, lib: false },
   }
+
+  // 설정 가져오기 (기본값과 병합)
+  let initFolders = config.get<FolderSettings>("initFolders")
+  if (!initFolders) {
+    initFolders = defaultInitFolders
+  } else {
+    // 누락된 속성 보완
+    initFolders = {
+      ...defaultInitFolders,
+      ...initFolders,
+    }
+  }
+
+  let domainLayers = config.get<DomainLayerSettings>("domainLayers")
+  if (!domainLayers) {
+    domainLayers = defaultDomainLayers
+  } else {
+    // 누락된 속성 보완
+    domainLayers = {
+      ...defaultDomainLayers,
+      ...domainLayers,
+    }
+  }
+
+  let layerStructure = config.get<LayerStructureSettings>("layerStructure")
+  if (!layerStructure) {
+    layerStructure = defaultLayerStructure
+  } else {
+    // 누락된 속성 보완 (중첩 객체 처리)
+    layerStructure = {
+      entities: {
+        ...defaultLayerStructure.entities,
+        ...(layerStructure.entities || {}),
+      },
+      features: {
+        ...defaultLayerStructure.features,
+        ...(layerStructure.features || {}),
+      },
+      pages: {
+        ...defaultLayerStructure.pages,
+        ...(layerStructure.pages || {}),
+      },
+      widgets: {
+        ...defaultLayerStructure.widgets,
+        ...(layerStructure.widgets || {}),
+      },
+    }
+  }
+
+  // 표현식 미리 평가
+  const selectedEn = language === "en" ? "selected" : ""
+  const selectedKo = language === "ko" ? "selected" : ""
+
+  const checkedEntities = initFolders.entities ? "checked" : ""
+  const checkedFeatures = initFolders.features ? "checked" : ""
+  const checkedPages = initFolders.pages ? "checked" : ""
+  const checkedWidgets = initFolders.widgets ? "checked" : ""
+  const checkedShared = initFolders.shared ? "checked" : ""
+  const checkedApp = initFolders.app ? "checked" : ""
+
+  const checkedDomainEntities = domainLayers.entities ? "checked" : ""
+  const checkedDomainFeatures = domainLayers.features ? "checked" : ""
+  const checkedDomainPages = domainLayers.pages ? "checked" : ""
+  const checkedDomainWidgets = domainLayers.widgets ? "checked" : ""
+
+  // 레이어 구조 체크 상태 미리 평가
+  const checkedEntitiesModel = layerStructure.entities.model ? "checked" : ""
+  const checkedEntitiesApi = layerStructure.entities.api ? "checked" : ""
+  const checkedEntitiesUi = layerStructure.entities.ui ? "checked" : ""
+  const checkedEntitiesLib = layerStructure.entities.lib ? "checked" : ""
+
+  const checkedFeaturesModel = layerStructure.features.model ? "checked" : ""
+  const checkedFeaturesApi = layerStructure.features.api ? "checked" : ""
+  const checkedFeaturesUi = layerStructure.features.ui ? "checked" : ""
+  const checkedFeaturesLib = layerStructure.features.lib ? "checked" : ""
+
+  const checkedPagesModel = layerStructure.pages.model ? "checked" : ""
+  const checkedPagesApi = layerStructure.pages.api ? "checked" : ""
+  const checkedPagesUi = layerStructure.pages.ui ? "checked" : ""
+  const checkedPagesLib = layerStructure.pages.lib ? "checked" : ""
+  const checkedPagesComponent = layerStructure.pages.createComponent
+    ? "checked"
+    : ""
+
+  const checkedWidgetsModel = layerStructure.widgets.model ? "checked" : ""
+  const checkedWidgetsApi = layerStructure.widgets.api ? "checked" : ""
+  const checkedWidgetsUi = layerStructure.widgets.ui ? "checked" : ""
+  const checkedWidgetsLib = layerStructure.widgets.lib ? "checked" : ""
 
   // 디버깅을 위해 콘솔에 현재 설정값 출력
   console.log("Current settings:", {
@@ -576,6 +699,36 @@ async function getSettingsWebviewContent(
     initFolders,
     domainLayers,
     layerStructure,
+    // 미리 평가한 표현식 결과
+    selectedEn,
+    selectedKo,
+    checkedEntities,
+    checkedFeatures,
+    checkedPages,
+    checkedWidgets,
+    checkedShared,
+    checkedApp,
+    checkedDomainEntities,
+    checkedDomainFeatures,
+    checkedDomainPages,
+    checkedDomainWidgets,
+    checkedEntitiesModel,
+    checkedEntitiesApi,
+    checkedEntitiesUi,
+    checkedEntitiesLib,
+    checkedFeaturesModel,
+    checkedFeaturesApi,
+    checkedFeaturesUi,
+    checkedFeaturesLib,
+    checkedPagesModel,
+    checkedPagesApi,
+    checkedPagesUi,
+    checkedPagesLib,
+    checkedPagesComponent,
+    checkedWidgetsModel,
+    checkedWidgetsApi,
+    checkedWidgetsUi,
+    checkedWidgetsLib,
   }
 
   // HTML 템플릿 로드 및 변수 대체
