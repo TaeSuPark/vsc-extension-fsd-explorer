@@ -403,7 +403,7 @@ async function createDomain(): Promise<void> {
         const componentFilePath = path.join(domainPath, `${componentName}.tsx`)
 
         // 컴포넌트 기본 내용 생성
-        const componentContent = `import React from 'react';\n\nexport const ${componentName} = () => {\n  return (\n    <>\n      <h1>${componentName} ${getMessage(
+        const componentContent = `\nexport const ${componentName} = () => {\n  return (\n    <>\n      <h1>${componentName} ${getMessage(
           "componentPage"
         )}</h1>\n      {/* ${getMessage(
           "addComponentContent"
@@ -507,7 +507,7 @@ async function loadHtmlTemplate(
   }
 }
 
-// 설정 웹뷰 HTML 콘텐츠 생성 함수 수정
+// 설정 웹뷰 HTML 콘텐츠 생성 함수
 async function getSettingsWebviewContent(
   context: vscode.ExtensionContext,
   webview: vscode.Webview
@@ -529,43 +529,8 @@ async function getSettingsWebviewContent(
   // UI 메시지 가져오기
   const uiMessages = messages[language as keyof typeof messages]
 
-  // 타입 정의
-  interface FolderSettings {
-    entities: boolean
-    features: boolean
-    pages: boolean
-    widgets: boolean
-    shared: boolean
-    app: boolean
-  }
-
-  interface DomainLayerSettings {
-    entities: boolean
-    features: boolean
-    pages: boolean
-    widgets: boolean
-  }
-
-  interface LayerStructure {
-    model: boolean
-    api: boolean
-    ui: boolean
-    lib: boolean
-  }
-
-  interface PageLayerStructure extends LayerStructure {
-    createComponent: boolean
-  }
-
-  interface LayerStructureSettings {
-    entities: LayerStructure
-    features: LayerStructure
-    pages: PageLayerStructure
-    widgets: LayerStructure
-  }
-
   // 기본값 정의
-  const defaultInitFolders: FolderSettings = {
+  const defaultInitFolders = {
     entities: true,
     features: true,
     pages: true,
@@ -574,14 +539,14 @@ async function getSettingsWebviewContent(
     app: true,
   }
 
-  const defaultDomainLayers: DomainLayerSettings = {
+  const defaultDomainLayers = {
     entities: true,
     features: true,
     pages: true,
     widgets: true,
   }
 
-  const defaultLayerStructure: LayerStructureSettings = {
+  const defaultLayerStructure = {
     entities: { model: true, api: true, ui: false, lib: false },
     features: { model: true, api: true, ui: true, lib: false },
     pages: {
@@ -595,70 +560,57 @@ async function getSettingsWebviewContent(
   }
 
   // 설정 가져오기 (기본값과 병합)
-  let initFolders = config.get<FolderSettings>("initFolders")
-  if (!initFolders) {
-    initFolders = defaultInitFolders
-  } else {
-    // 누락된 속성 보완
-    initFolders = {
-      ...defaultInitFolders,
-      ...initFolders,
-    }
-  }
+  // 중요: config.get()이 undefined를 반환할 수 있으므로 기본값을 명시적으로 설정
 
-  let domainLayers = config.get<DomainLayerSettings>("domainLayers")
-  if (!domainLayers) {
-    domainLayers = defaultDomainLayers
-  } else {
-    // 누락된 속성 보완
-    domainLayers = {
-      ...defaultDomainLayers,
-      ...domainLayers,
-    }
-  }
+  const initFolders = config.inspect<Record<string, boolean>>("initFolders")
+    ? config.inspect<Record<string, boolean>>("initFolders")?.globalValue
+    : config.inspect<Record<string, boolean>>("initFolders")?.defaultValue ||
+      (defaultInitFolders as Record<string, boolean>)
 
-  let layerStructure = config.get<LayerStructureSettings>("layerStructure")
-  if (!layerStructure) {
-    layerStructure = defaultLayerStructure
-  } else {
-    // 누락된 속성 보완 (중첩 객체 처리)
-    layerStructure = {
-      entities: {
-        ...defaultLayerStructure.entities,
-        ...(layerStructure.entities || {}),
-      },
-      features: {
-        ...defaultLayerStructure.features,
-        ...(layerStructure.features || {}),
-      },
-      pages: {
-        ...defaultLayerStructure.pages,
-        ...(layerStructure.pages || {}),
-      },
-      widgets: {
-        ...defaultLayerStructure.widgets,
-        ...(layerStructure.widgets || {}),
-      },
-    }
-  }
+  const domainLayers =
+    config.inspect<Record<string, boolean>>("domainLayers")?.globalValue ||
+    config.inspect<Record<string, boolean>>("domainLayers")?.defaultValue ||
+    (defaultDomainLayers as Record<string, boolean>)
+
+  const layerStructure =
+    config.inspect<Record<string, Record<string, boolean>>>("layerStructure")
+      ?.globalValue ||
+    config.inspect<Record<string, Record<string, boolean>>>("layerStructure")
+      ?.defaultValue ||
+    (defaultLayerStructure as Record<string, Record<string, boolean>>)
+
+  // 디버깅을 위해 콘솔에 현재 설정값 출력
+  console.log("Current settings:", {
+    language,
+    initFolders,
+    domainLayers,
+    layerStructure,
+    defaultValues: {
+      initFolders: config.inspect("initFolders")?.defaultValue,
+      domainLayers: config.inspect("domainLayers")?.defaultValue,
+      layerStructure: config.inspect("layerStructure")?.defaultValue,
+    },
+  })
 
   // 표현식 미리 평가
   const selectedEn = language === "en" ? "selected" : ""
   const selectedKo = language === "ko" ? "selected" : ""
 
-  const checkedEntities = initFolders.entities ? "checked" : ""
-  const checkedFeatures = initFolders.features ? "checked" : ""
-  const checkedPages = initFolders.pages ? "checked" : ""
-  const checkedWidgets = initFolders.widgets ? "checked" : ""
-  const checkedShared = initFolders.shared ? "checked" : ""
-  const checkedApp = initFolders.app ? "checked" : ""
+  // initFolders 체크 상태
+  const checkedEntities = initFolders?.entities ? "checked" : ""
+  const checkedFeatures = initFolders?.features ? "checked" : ""
+  const checkedPages = initFolders?.pages ? "checked" : ""
+  const checkedWidgets = initFolders?.widgets ? "checked" : ""
+  const checkedShared = initFolders?.shared ? "checked" : ""
+  const checkedApp = initFolders?.app ? "checked" : ""
 
-  const checkedDomainEntities = domainLayers.entities ? "checked" : ""
-  const checkedDomainFeatures = domainLayers.features ? "checked" : ""
-  const checkedDomainPages = domainLayers.pages ? "checked" : ""
-  const checkedDomainWidgets = domainLayers.widgets ? "checked" : ""
+  // domainLayers 체크 상태
+  const checkedDomainEntities = domainLayers?.entities ? "checked" : ""
+  const checkedDomainFeatures = domainLayers?.features ? "checked" : ""
+  const checkedDomainPages = domainLayers?.pages ? "checked" : ""
+  const checkedDomainWidgets = domainLayers?.widgets ? "checked" : ""
 
-  // 레이어 구조 체크 상태 미리 평가
+  // layerStructure 체크 상태
   const checkedEntitiesModel = layerStructure.entities.model ? "checked" : ""
   const checkedEntitiesApi = layerStructure.entities.api ? "checked" : ""
   const checkedEntitiesUi = layerStructure.entities.ui ? "checked" : ""
@@ -682,65 +634,63 @@ async function getSettingsWebviewContent(
   const checkedWidgetsUi = layerStructure.widgets.ui ? "checked" : ""
   const checkedWidgetsLib = layerStructure.widgets.lib ? "checked" : ""
 
-  // 디버깅을 위해 콘솔에 현재 설정값 출력
-  console.log("Current settings:", {
-    language,
-    initFolders,
-    domainLayers,
-    layerStructure,
+  // HTML 템플릿 파일 읽기
+  const templatePath = vscode.Uri.joinPath(
+    context.extensionUri,
+    "media",
+    "settings.html"
+  )
+  let templateContent = await fs.promises.readFile(templatePath.fsPath, "utf8")
+
+  // 템플릿 변수 대체
+  templateContent = templateContent
+    .replace(/\${styleUri}/g, styleUri.toString())
+    .replace(/\${scriptUri}/g, scriptUri.toString())
+    .replace(/\${language}/g, language)
+    .replace(/\${selectedEn}/g, selectedEn)
+    .replace(/\${selectedKo}/g, selectedKo)
+    .replace(/\${checkedEntities}/g, checkedEntities)
+    .replace(/\${checkedFeatures}/g, checkedFeatures)
+    .replace(/\${checkedPages}/g, checkedPages)
+    .replace(/\${checkedWidgets}/g, checkedWidgets)
+    .replace(/\${checkedShared}/g, checkedShared)
+    .replace(/\${checkedApp}/g, checkedApp)
+    .replace(/\${checkedDomainEntities}/g, checkedDomainEntities)
+    .replace(/\${checkedDomainFeatures}/g, checkedDomainFeatures)
+    .replace(/\${checkedDomainPages}/g, checkedDomainPages)
+    .replace(/\${checkedDomainWidgets}/g, checkedDomainWidgets)
+    .replace(/\${checkedEntitiesModel}/g, checkedEntitiesModel)
+    .replace(/\${checkedEntitiesApi}/g, checkedEntitiesApi)
+    .replace(/\${checkedEntitiesUi}/g, checkedEntitiesUi)
+    .replace(/\${checkedEntitiesLib}/g, checkedEntitiesLib)
+    .replace(/\${checkedFeaturesModel}/g, checkedFeaturesModel)
+    .replace(/\${checkedFeaturesApi}/g, checkedFeaturesApi)
+    .replace(/\${checkedFeaturesUi}/g, checkedFeaturesUi)
+    .replace(/\${checkedFeaturesLib}/g, checkedFeaturesLib)
+    .replace(/\${checkedPagesModel}/g, checkedPagesModel)
+    .replace(/\${checkedPagesApi}/g, checkedPagesApi)
+    .replace(/\${checkedPagesUi}/g, checkedPagesUi)
+    .replace(/\${checkedPagesLib}/g, checkedPagesLib)
+    .replace(/\${checkedPagesComponent}/g, checkedPagesComponent)
+    .replace(/\${checkedWidgetsModel}/g, checkedWidgetsModel)
+    .replace(/\${checkedWidgetsApi}/g, checkedWidgetsApi)
+    .replace(/\${checkedWidgetsUi}/g, checkedWidgetsUi)
+    .replace(/\${checkedWidgetsLib}/g, checkedWidgetsLib)
+
+  // UI 메시지 대체
+  Object.entries(uiMessages).forEach(([key, value]) => {
+    // value를 문자열로 변환
+    const stringValue = String(value)
+    templateContent = templateContent.replace(
+      new RegExp(`\\$\\{uiMessages\\.${key}\\}`, "g"),
+      stringValue
+    )
   })
 
-  // 템플릿 변수
-  const templateVariables = {
-    styleUri: styleUri.toString(),
-    scriptUri: scriptUri.toString(),
-    language,
-    uiMessages,
-    initFolders,
-    domainLayers,
-    layerStructure,
-    // 미리 평가한 표현식 결과
-    selectedEn,
-    selectedKo,
-    checkedEntities,
-    checkedFeatures,
-    checkedPages,
-    checkedWidgets,
-    checkedShared,
-    checkedApp,
-    checkedDomainEntities,
-    checkedDomainFeatures,
-    checkedDomainPages,
-    checkedDomainWidgets,
-    checkedEntitiesModel,
-    checkedEntitiesApi,
-    checkedEntitiesUi,
-    checkedEntitiesLib,
-    checkedFeaturesModel,
-    checkedFeaturesApi,
-    checkedFeaturesUi,
-    checkedFeaturesLib,
-    checkedPagesModel,
-    checkedPagesApi,
-    checkedPagesUi,
-    checkedPagesLib,
-    checkedPagesComponent,
-    checkedWidgetsModel,
-    checkedWidgetsApi,
-    checkedWidgetsUi,
-    checkedWidgetsLib,
-  }
-
-  // HTML 템플릿 로드 및 변수 대체
-  return await loadHtmlTemplate(
-    context,
-    webview,
-    "media/settings.html",
-    templateVariables
-  )
+  return templateContent
 }
 
-// 설정 웹뷰 패널 생성 함수 수정
+// 설정 웹뷰 패널 생성 함수
 async function createSettingsWebview(context: vscode.ExtensionContext) {
   // 웹뷰 패널 생성
   const panel = vscode.window.createWebviewPanel(

@@ -59,20 +59,32 @@
           <label>${uiMessages.layersAvailable}:</label>
           <div class="checkbox-group">
             <label
-              ><input type="checkbox" id="domain-entities"
-              ${domainLayers.entities ? "checked" : ""}> entities</label
+              ><input
+                type="checkbox"
+                id="domain-entities"
+                ${checkedDomainEntities}
+              />
+              entities</label
             >
             <label
-              ><input type="checkbox" id="domain-features"
-              ${domainLayers.features ? "checked" : ""}> features</label
+              ><input
+                type="checkbox"
+                id="domain-features"
+                ${checkedDomainFeatures}
+              />
+              features</label
             >
             <label
-              ><input type="checkbox" id="domain-pages" ${domainLayers.pages ?
-              "checked" : ""}> pages</label
+              ><input type="checkbox" id="domain-pages" ${checkedDomainPages} />
+              pages</label
             >
             <label
-              ><input type="checkbox" id="domain-widgets" ${domainLayers.widgets
-              ? "checked" : ""}> widgets</label
+              ><input
+                type="checkbox"
+                id="domain-widgets"
+                ${checkedDomainWidgets}
+              />
+              widgets</label
             >
           </div>
         </div>
@@ -81,103 +93,126 @@
       <section class="setting-section">
         <h2>${uiMessages.layerStructure}</h2>
 
-        <div class="layer-settings">
-          <h3>entities</h3>
+        <!-- Entities Layer Structure -->
+        <div class="form-group">
+          <label>entities:</label>
           <div class="checkbox-group">
             <label
-              ><input type="checkbox" id="entities-model"
-              ${layerStructure.entities.model ? "checked" : ""}> model</label
+              ><input
+                type="checkbox"
+                id="entities-model"
+                ${checkedEntitiesModel}
+              />
+              model</label
             >
             <label
-              ><input type="checkbox" id="entities-api"
-              ${layerStructure.entities.api ? "checked" : ""}> api</label
+              ><input type="checkbox" id="entities-api" ${checkedEntitiesApi} />
+              api</label
             >
             <label
-              ><input type="checkbox" id="entities-ui"
-              ${layerStructure.entities.ui ? "checked" : ""}> ui</label
+              ><input type="checkbox" id="entities-ui" ${checkedEntitiesUi} />
+              ui</label
             >
             <label
-              ><input type="checkbox" id="entities-lib"
-              ${layerStructure.entities.lib ? "checked" : ""}> lib</label
+              ><input type="checkbox" id="entities-lib" ${checkedEntitiesLib} />
+              lib</label
             >
           </div>
         </div>
 
-        <div class="layer-settings">
-          <h3>features</h3>
+        <!-- Features Layer Structure -->
+        <div class="form-group">
+          <label>features:</label>
           <div class="checkbox-group">
             <label
-              ><input type="checkbox" id="features-model"
-              ${layerStructure.features.model ? "checked" : ""}> model</label
+              ><input
+                type="checkbox"
+                id="features-model"
+                ${checkedFeaturesModel}
+              />
+              model</label
             >
             <label
-              ><input type="checkbox" id="features-api"
-              ${layerStructure.features.api ? "checked" : ""}> api</label
+              ><input type="checkbox" id="features-api" ${checkedFeaturesApi} />
+              api</label
             >
             <label
-              ><input type="checkbox" id="features-ui"
-              ${layerStructure.features.ui ? "checked" : ""}> ui</label
+              ><input type="checkbox" id="features-ui" ${checkedFeaturesUi} />
+              ui</label
             >
             <label
-              ><input type="checkbox" id="features-lib"
-              ${layerStructure.features.lib ? "checked" : ""}> lib</label
+              ><input type="checkbox" id="features-lib" ${checkedFeaturesLib} />
+              lib</label
             >
           </div>
         </div>
 
-        <div class="layer-settings">
-          <h3>pages</h3>
+        <!-- Pages Layer Structure -->
+        <div class="form-group">
+          <label>pages:</label>
           <div class="checkbox-group">
             <label
-              ><input type="checkbox" id="pages-model"
-              ${layerStructure.pages.model ? "checked" : ""}> model</label
+              ><input type="checkbox" id="pages-model" ${checkedPagesModel} />
+              model</label
             >
             <label
-              ><input type="checkbox" id="pages-api" ${layerStructure.pages.api
-              ? "checked" : ""}> api</label
+              ><input type="checkbox" id="pages-api" ${checkedPagesApi} />
+              api</label
             >
             <label
-              ><input type="checkbox" id="pages-ui" ${layerStructure.pages.ui ?
-              "checked" : ""}> ui</label
+              ><input type="checkbox" id="pages-ui" ${checkedPagesUi} />
+              ui</label
             >
             <label
-              ><input type="checkbox" id="pages-lib" ${layerStructure.pages.lib
-              ? "checked" : ""}> lib</label
+              ><input type="checkbox" id="pages-lib" ${checkedPagesLib} />
+              lib</label
             >
             <label
-              ><input type="checkbox" id="pages-component"
-              ${layerStructure.pages.createComponent ? "checked" : ""}>
+              ><input
+                type="checkbox"
+                id="pages-component"
+                ${checkedPagesComponent}
+              />
               ${uiMessages.createComponent}</label
             >
           </div>
         </div>
 
-        <div class="layer-settings">
-          <h3>widgets</h3>
+        <!-- Widgets Layer Structure -->
+        <div class="form-group">
+          <label>widgets:</label>
           <div class="checkbox-group">
             <label
-              ><input type="checkbox" id="widgets-model"
-              ${layerStructure.widgets.model ? "checked" : ""}> model</label
+              ><input
+                type="checkbox"
+                id="widgets-model"
+                ${checkedWidgetsModel}
+              />
+              model</label
             >
             <label
-              ><input type="checkbox" id="widgets-api"
-              ${layerStructure.widgets.api ? "checked" : ""}> api</label
+              ><input type="checkbox" id="widgets-api" ${checkedWidgetsApi} />
+              api</label
             >
             <label
-              ><input type="checkbox" id="widgets-ui"
-              ${layerStructure.widgets.ui ? "checked" : ""}> ui</label
+              ><input type="checkbox" id="widgets-ui" ${checkedWidgetsUi} />
+              ui</label
             >
             <label
-              ><input type="checkbox" id="widgets-lib"
-              ${layerStructure.widgets.lib ? "checked" : ""}> lib</label
+              ><input type="checkbox" id="widgets-lib" ${checkedWidgetsLib} />
+              lib</label
             >
           </div>
         </div>
       </section>
 
       <div class="button-group">
-        <button id="saveButton">${uiMessages.saveSettings}</button>
-        <button id="resetButton">${uiMessages.resetToDefaults}</button>
+        <button id="saveButton" class="primary-button">
+          ${uiMessages.saveSettings}
+        </button>
+        <button id="resetButton" class="secondary-button">
+          ${uiMessages.resetToDefaults}
+        </button>
       </div>
     </div>
     <script src="${scriptUri}"></script>
