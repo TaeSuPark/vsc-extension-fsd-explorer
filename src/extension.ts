@@ -3,6 +3,7 @@
 import * as vscode from "vscode"
 import * as fs from "fs"
 import * as path from "path"
+import { FSDExplorer } from "./fsdExplorer"
 
 // 다국어 메시지 정의
 const messages = {
@@ -789,11 +790,28 @@ export function activate(context: vscode.ExtensionContext) {
     }
   )
 
+  // FSD 익스플로러 등록
+  const workspaceRoot =
+    vscode.workspace.workspaceFolders &&
+    vscode.workspace.workspaceFolders.length > 0
+      ? vscode.workspace.workspaceFolders[0].uri.fsPath
+      : undefined
+
+  const fsdExplorer = new FSDExplorer(workspaceRoot)
+  vscode.window.registerTreeDataProvider("fsdExplorer", fsdExplorer)
+
+  // 리프레시 명령어 등록
+  const refreshExplorerDisposable = vscode.commands.registerCommand(
+    "fsd-creator.refreshExplorer",
+    () => fsdExplorer.refresh()
+  )
+
   context.subscriptions.push(
     helloWorldDisposable,
     initFsdDisposable,
     createDomainDisposable,
-    openSettingsDisposable
+    openSettingsDisposable,
+    refreshExplorerDisposable
   )
 }
 

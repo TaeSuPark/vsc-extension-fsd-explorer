@@ -9,7 +9,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:fsdExplorer"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -28,6 +30,11 @@
       {
         "command": "fsd-creator.openSettings",
         "title": "FSD: Open Settings"
+      },
+      {
+        "command": "fsd-creator.refreshExplorer",
+        "title": "Refresh FSD Explorer",
+        "icon": "$(refresh)"
       }
     ],
     "viewsContainers": {
@@ -40,6 +47,12 @@
       ]
     },
     "views": {
+      "explorer": [
+        {
+          "id": "fsdExplorer",
+          "name": "FSD Explorer"
+        }
+      ],
       "fsd-creator": [
         {
           "id": "fsd-actions",
@@ -50,7 +63,7 @@
     "viewsWelcome": [
       {
         "view": "fsd-actions",
-        "contents": "%fsd-creator.welcome%"
+        "contents": "FSD Creator\n[Initialize FSD](command:fsd-creator.initializeFsd)\n[Create Domain](command:fsd-creator.createDomain)\n[Open Settings](command:fsd-creator.openSettings)"
       }
     ],
     "configuration": {
@@ -123,6 +136,15 @@
           "description": "Default folder structure for each layer"
         }
       }
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "fsd-creator.refreshExplorer",
+          "when": "view == fsdExplorer",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {
