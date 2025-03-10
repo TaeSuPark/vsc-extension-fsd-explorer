@@ -21,15 +21,18 @@
       },
       {
         "command": "fsd-creator.initializeFsd",
-        "title": "FSD: Initialize FSD Structure"
+        "title": "FSD: Initialize FSD Structure",
+        "icon": "$(project)"
       },
       {
         "command": "fsd-creator.createDomain",
-        "title": "FSD: Create Domain"
+        "title": "FSD: Create Domain",
+        "icon": "$(add)"
       },
       {
         "command": "fsd-creator.openSettings",
-        "title": "FSD: Open Settings"
+        "title": "FSD: Open Settings",
+        "icon": "$(gear)"
       },
       {
         "command": "fsd-creator.refreshExplorer",
@@ -37,35 +40,38 @@
         "icon": "$(refresh)"
       }
     ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "fsd-creator",
-          "title": "FSD Creator",
-          "icon": "resources/fsd-icon.svg"
-        }
-      ]
-    },
     "views": {
       "explorer": [
         {
           "id": "fsdExplorer",
           "name": "FSD Explorer"
         }
-      ],
-      "fsd-creator": [
+      ]
+    },
+    "menus": {
+      "view/title": [
         {
-          "id": "fsd-actions",
-          "name": "FSD Actions"
+          "command": "fsd-creator.initializeFsd",
+          "when": "view == fsdExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "fsd-creator.createDomain",
+          "when": "view == fsdExplorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "fsd-creator.openSettings",
+          "when": "view == fsdExplorer",
+          "group": "navigation@3"
+        },
+        {
+          "command": "fsd-creator.refreshExplorer",
+          "when": "view == fsdExplorer",
+          "group": "navigation@4"
         }
       ]
     },
-    "viewsWelcome": [
-      {
-        "view": "fsd-actions",
-        "contents": "FSD Creator\n[Initialize FSD](command:fsd-creator.initializeFsd)\n[Create Domain](command:fsd-creator.createDomain)\n[Open Settings](command:fsd-creator.openSettings)"
-      }
-    ],
     "configuration": {
       "title": "FSD Creator",
       "properties": {
@@ -80,7 +86,7 @@
             "English",
             "한국어"
           ],
-          "description": "Language setting for FSD Creator / FSD Creator의 언어 설정"
+          "description": "Language for the extension UI"
         },
         "fsd-creator.initFolders": {
           "type": "object",
@@ -92,7 +98,7 @@
             "shared": true,
             "app": true
           },
-          "description": "Folders to create when initializing FSD structure"
+          "description": "Folders to create during FSD initialization"
         },
         "fsd-creator.domainLayers": {
           "type": "object",
@@ -133,18 +139,9 @@
               "lib": false
             }
           },
-          "description": "Default folder structure for each layer"
+          "description": "Structure of each layer for domain creation"
         }
       }
-    },
-    "menus": {
-      "view/title": [
-        {
-          "command": "fsd-creator.refreshExplorer",
-          "when": "view == fsdExplorer",
-          "group": "navigation"
-        }
-      ]
     }
   },
   "scripts": {
@@ -157,23 +154,13 @@
   },
   "devDependencies": {
     "@types/vscode": "^1.97.0",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
-    "@typescript-eslint/eslint-plugin": "^8.22.0",
-    "@typescript-eslint/parser": "^8.22.0",
-    "eslint": "^9.19.0",
-    "typescript": "^5.7.3",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
-  },
-  "files": [
-    "out/**/*",
-    "media/**/*"
-  ],
-  "l10n": [
-    {
-      "id": "fsd-creator.welcome",
-      "path": "./package.nls.{locale}.json"
-    }
-  ]
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "14.x",
+    "eslint": "^7.27.0",
+    "glob": "^7.1.7",
+    "mocha": "^8.4.0",
+    "typescript": "^4.3.2",
+    "vscode-test": "^1.5.2"
+  }
 }

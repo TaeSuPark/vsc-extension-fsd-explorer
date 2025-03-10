@@ -255,8 +255,8 @@ async function initializeFsdStructure(): Promise<void> {
     )
   }
 
-  // 탐색기 새로고침
-  vscode.commands.executeCommand(getMessage("refreshExplorer"))
+  // FSD Explorer 새로고침
+  vscode.commands.executeCommand("fsd-creator.refreshExplorer")
 }
 
 // 도메인 생성 함수
@@ -445,8 +445,8 @@ async function createDomain(): Promise<void> {
     )
   }
 
-  // 탐색기 새로고침
-  vscode.commands.executeCommand(getMessage("refreshExplorer"))
+  // FSD Explorer 새로고침
+  vscode.commands.executeCommand("fsd-creator.refreshExplorer")
 }
 
 // HTML 템플릿 로드 및 변수 대체 함수
