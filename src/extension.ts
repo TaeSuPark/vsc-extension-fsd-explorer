@@ -798,7 +798,11 @@ export function activate(context: vscode.ExtensionContext) {
       : undefined
 
   const fsdExplorer = new FSDExplorer(workspaceRoot)
-  vscode.window.registerTreeDataProvider("fsdExplorer", fsdExplorer)
+  const treeView = vscode.window.createTreeView("fsdExplorer", {
+    treeDataProvider: fsdExplorer,
+    showCollapseAll: true,
+  })
+  fsdExplorer.setTreeView(treeView)
 
   // 리프레시 명령어 등록
   const refreshExplorerDisposable = vscode.commands.registerCommand(
@@ -806,12 +810,15 @@ export function activate(context: vscode.ExtensionContext) {
     () => fsdExplorer.refresh()
   )
 
+  // 확장 프로그램이 비활성화될 때 리소스 해제
   context.subscriptions.push(
     helloWorldDisposable,
     initFsdDisposable,
     createDomainDisposable,
     openSettingsDisposable,
-    refreshExplorerDisposable
+    refreshExplorerDisposable,
+    treeView,
+    { dispose: () => fsdExplorer.dispose() } // FSDExplorer 리소스 해제
   )
 }
 
