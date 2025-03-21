@@ -1246,8 +1246,8 @@ export function activate(context: vscode.ExtensionContext) {
       // 모든 규칙 위반 파일 찾기
       const violations: FSDItem[] = []
 
-      // 특정 폴더 내 위반 사항만 찾을지, 전체 위반 사항을 찾을지 결정
-      const searchPath = item ? item.resourceUri.fsPath : undefined
+      // 항상 전체 워크스페이스 검사
+      const searchPath = undefined // 항상 전체 검사
 
       // 전역 변수 사용
       fsdExplorerInstance.findViolations(violations, searchPath)

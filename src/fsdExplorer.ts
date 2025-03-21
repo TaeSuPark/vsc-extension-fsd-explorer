@@ -399,16 +399,65 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
 
   // 규칙 위반 항목 찾기
   public findViolations(violations: FSDItem[], searchPath?: string): void {
-    for (const [path, item] of this.itemsMap.entries()) {
-      // 특정 경로 내에서만 검색하는 경우
-      if (searchPath && !path.startsWith(searchPath)) {
-        continue
-      }
+    // 검색 시작 경로 설정
+    const startPath = searchPath || this.workspaceRoot
+    if (!startPath || !fs.existsSync(startPath)) {
+      return
+    }
 
-      // 파일이고 규칙을 위반하는 경우
-      if (item.contextValue === "fsdViolation") {
-        violations.push(item)
+    // 파일 시스템 직접 스캔
+    this.scanForViolations(startPath, violations)
+  }
+
+  // 파일 시스템 직접 스캔하여 위반 항목 찾기
+  private scanForViolations(dirPath: string, violations: FSDItem[]): void {
+    try {
+      const files = fs.readdirSync(dirPath)
+
+      for (const file of files) {
+        try {
+          const filePath = path.join(dirPath, file)
+          const stat = fs.statSync(filePath)
+
+          if (stat.isDirectory()) {
+            // 디렉토리인 경우 재귀적으로 스캔
+            this.scanForViolations(filePath, violations)
+          } else {
+            // 파일인 경우 규칙 위반 검사
+            const violatesRules = this.checkFSDRuleViolation(filePath)
+
+            if (violatesRules) {
+              // 맵에 이미 있는 항목 사용 또는 새 항목 생성
+              const uri = vscode.Uri.file(filePath)
+              const existingItem = this.itemsMap.get(filePath)
+
+              if (existingItem) {
+                violations.push(existingItem)
+              } else {
+                // 새 항목 생성
+                const fileName = path.basename(filePath)
+                const newItem = new FSDItem(
+                  fileName,
+                  vscode.TreeItemCollapsibleState.None,
+                  uri,
+                  undefined,
+                  true
+                )
+                violations.push(newItem)
+              }
+            }
+          }
+        } catch (error) {
+          // 개별 파일 처리 오류는 무시하고 계속 진행
+          console.error(
+            `파일 처리 중 오류 (${path.join(dirPath, file)}):`,
+            error
+          )
+        }
       }
+    } catch (error) {
+      // 디렉토리 처리 오류는 무시하고 계속 진행
+      console.error(`디렉토리 처리 중 오류 (${dirPath}):`, error)
     }
   }
 }
