@@ -1125,6 +1125,38 @@ async function deleteItem(fileItem: FSDItem) {
   }
 }
 
+// FSD 규칙 위반 파일 수정 명령어
+const fixFsdViolationDisposable = vscode.commands.registerCommand(
+  "fsd-creator.fixViolation",
+  async (item: FSDItem) => {
+    if (item.violatesRules) {
+      // 파일 열기 (미리보기 모드가 아닌 완전히 열기)
+      const document = await vscode.workspace.openTextDocument(item.resourceUri)
+      await vscode.window.showTextDocument(document, { preview: false })
+
+      // 사용자에게 안내 메시지 표시
+      vscode.window.showInformationMessage(
+        `FSD 규칙 위반: 하위 계층은 상위 계층을 import할 수 없습니다. 파일을 수정해주세요.`
+      )
+    }
+  }
+)
+
+// 파일 열기 명령어 등록
+const openFileDisposable = vscode.commands.registerCommand(
+  "fsd-creator.openFile",
+  async (item: FSDItem) => {
+    if (
+      item.resourceUri &&
+      (item.contextValue === "file" || item.contextValue === "fsdViolation")
+    ) {
+      // 미리보기 모드가 아닌 완전히 열기 위해 preview: false 옵션 사용
+      const document = await vscode.workspace.openTextDocument(item.resourceUri)
+      await vscode.window.showTextDocument(document, { preview: false })
+    }
+  }
+)
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -1200,6 +1232,25 @@ export function activate(context: vscode.ExtensionContext) {
     deleteItem
   )
 
+  // FSD 규칙 위반 파일 수정 명령어 등록
+  const fixFsdViolationDisposable = vscode.commands.registerCommand(
+    "fsd-creator.fixViolation",
+    async (item: FSDItem) => {
+      if (item.violatesRules) {
+        // 파일 열기 (미리보기 모드가 아닌 완전히 열기)
+        const document = await vscode.workspace.openTextDocument(
+          item.resourceUri
+        )
+        await vscode.window.showTextDocument(document, { preview: false })
+
+        // 사용자에게 안내 메시지 표시
+        vscode.window.showInformationMessage(
+          `FSD 규칙 위반: 하위 계층은 상위 계층을 import할 수 없습니다. 파일을 수정해주세요.`
+        )
+      }
+    }
+  )
+
   // 확장 프로그램이 비활성화될 때 리소스 해제
   context.subscriptions.push(
     helloWorldDisposable,
@@ -1212,7 +1263,9 @@ export function activate(context: vscode.ExtensionContext) {
     createFileDisposable,
     createFolderDisposable,
     renameDisposable,
-    deleteDisposable
+    deleteDisposable,
+    fixFsdViolationDisposable,
+    openFileDisposable
   )
 }
 

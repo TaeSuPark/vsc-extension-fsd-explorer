@@ -58,6 +58,16 @@
         "command": "fsd-creator.delete",
         "title": "Delete",
         "icon": "$(trash)"
+      },
+      {
+        "command": "fsd-creator.fixViolation",
+        "title": "Fix FSD Rule Violation",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "fsd-creator.openFile",
+        "title": "Open File",
+        "icon": "$(go-to-file)"
       }
     ],
     "views": {
@@ -111,6 +121,16 @@
           "command": "fsd-creator.delete",
           "when": "view == fsdExplorer",
           "group": "7_modification@2"
+        },
+        {
+          "command": "fsd-creator.fixViolation",
+          "when": "view == fsdExplorer && viewItem == fsdViolation",
+          "group": "inline"
+        },
+        {
+          "command": "fsd-creator.openFile",
+          "when": "view == fsdExplorer && (viewItem == file || viewItem == fsdViolation)",
+          "group": "navigation"
         }
       ]
     },

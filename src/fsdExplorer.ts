@@ -8,30 +8,28 @@ export class FSDItem extends vscode.TreeItem {
     public readonly label: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly resourceUri: vscode.Uri,
-    public readonly parent?: FSDItem // 부모 항목 추가
+    public readonly parent?: FSDItem,
+    public readonly violatesRules: boolean = false // 규칙 위반 여부 추가
   ) {
     super(label, collapsibleState)
     this.tooltip = resourceUri.fsPath
     this.resourceUri = resourceUri // 리소스 URI 설정 (VS Code가 자동으로 현재 파일 강조에 사용)
 
-    // 컨텍스트 값 설정 (폴더 또는 파일)
-    this.contextValue =
-      collapsibleState === vscode.TreeItemCollapsibleState.None
-        ? "file"
-        : "folder"
-
-    // 아이콘 설정
-    if (collapsibleState === vscode.TreeItemCollapsibleState.None) {
-      // 파일인 경우
-      this.iconPath = new vscode.ThemeIcon("file")
-      this.command = {
-        command: "vscode.open",
-        title: "Open File",
-        arguments: [resourceUri],
+    // 파일 또는 폴더 여부 설정
+    if (this.resourceUri) {
+      if (fs.lstatSync(this.resourceUri.fsPath).isDirectory()) {
+        this.iconPath = new vscode.ThemeIcon("folder")
+        this.contextValue = "folder"
+      } else {
+        this.iconPath = new vscode.ThemeIcon(violatesRules ? "warning" : "file")
+        this.contextValue = violatesRules ? "fsdViolation" : "file"
       }
-    } else {
-      // 폴더인 경우
-      this.iconPath = new vscode.ThemeIcon("folder")
+    }
+
+    // 규칙 위반 시 스타일 변경
+    if (violatesRules) {
+      this.description = "FSD 규칙 위반"
+      this.tooltip = "이 파일은 FSD 아키텍처 규칙을 위반합니다"
     }
   }
 }
@@ -76,6 +74,25 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
   // TreeView 설정
   setTreeView(treeView: vscode.TreeView<FSDItem>) {
     this.treeView = treeView
+
+    // 트리 아이템 클릭 이벤트 처리
+    treeView.onDidChangeSelection(async (e) => {
+      if (e.selection.length > 0) {
+        const selectedItem = e.selection[0]
+
+        // 파일인 경우에만 열기
+        if (
+          selectedItem.contextValue === "file" ||
+          selectedItem.contextValue === "fsdViolation"
+        ) {
+          // 미리보기 모드가 아닌 완전히 열기 위해 preview: false 옵션 사용
+          const document = await vscode.workspace.openTextDocument(
+            selectedItem.resourceUri
+          )
+          await vscode.window.showTextDocument(document, { preview: false })
+        }
+      }
+    })
 
     // 초기 활성화된 편집기가 있으면 해당 파일 표시
     if (vscode.window.activeTextEditor) {
@@ -161,7 +178,7 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
 
   refresh(): void {
     this.itemsMap.clear()
-    this._onDidChangeTreeData.fire()
+    this._onDidChangeTreeData.fire(undefined)
   }
 
   getTreeItem(element: FSDItem): vscode.TreeItem {
@@ -215,43 +232,168 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
     }
   }
 
-  private getFolderContents(
-    folderPath: string,
-    parent: FSDItem
-  ): Thenable<FSDItem[]> {
-    if (!fs.existsSync(folderPath)) {
-      return Promise.resolve([])
+  // FSD 규칙 검사 함수 개선
+  private checkFSDRuleViolation(filePath: string): boolean {
+    // 파일 경로에서 계층 정보 추출
+    const workspacePath = this.workspaceRoot || ""
+    if (!workspacePath) {
+      return false // 워크스페이스 경로가 없으면 검사 불가
     }
 
-    const children = fs.readdirSync(folderPath)
-    const items: FSDItem[] = []
+    const srcPath = fs.existsSync(path.join(workspacePath, "src"))
+      ? path.join(workspacePath, "src")
+      : workspacePath
 
-    for (const child of children) {
-      const childPath = path.join(folderPath, child)
-      const stats = fs.statSync(childPath)
-      const uri = vscode.Uri.file(childPath)
+    // 상대 경로 계산
+    const relativePath = path.relative(srcPath, filePath)
+    const parts = relativePath.split(path.sep)
 
-      let item: FSDItem
-      if (stats.isDirectory()) {
-        item = new FSDItem(
-          child,
-          vscode.TreeItemCollapsibleState.Collapsed,
-          uri,
-          parent
-        )
-      } else {
-        item = new FSDItem(
-          child,
-          vscode.TreeItemCollapsibleState.None,
-          uri,
-          parent
-        )
+    // 파일이 아니면 검사하지 않음
+    if (fs.lstatSync(filePath).isDirectory() || parts.length < 2) {
+      return false
+    }
+
+    // 현재 파일의 계층 확인
+    const currentLayer = parts[0]
+
+    // 계층 우선순위 정의 (낮을수록 상위 계층)
+    const layerPriority: Record<string, number> = {
+      app: 0,
+      pages: 1,
+      widgets: 2,
+      features: 3,
+      entities: 4,
+      shared: 5,
+    }
+
+    // 파일 내용 읽기
+    try {
+      const content = fs.readFileSync(filePath, "utf-8")
+
+      // import 문 찾기 (더 정확한 정규식 사용)
+      const importRegex =
+        /import\s+(?:(?:\{[^}]*\})|(?:[^{}\s]+))\s+from\s+['"]([^'"]+)['"]/g
+      const aliasImportRegex =
+        /import\s+(?:(?:\{[^}]*\})|(?:[^{}\s]+))\s+from\s+['"]@\/([^'"]+)['"]/g
+
+      let match
+
+      // 상대 경로 import 검사
+      while ((match = importRegex.exec(content)) !== null) {
+        const importPath = match[1]
+
+        // 상대 경로 import만 검사
+        if (importPath.startsWith(".")) {
+          // 절대 경로로 변환
+          const importAbsolutePath = path.resolve(
+            path.dirname(filePath),
+            importPath
+          )
+          const importRelativePath = path.relative(srcPath, importAbsolutePath)
+          const importParts = importRelativePath.split(path.sep)
+
+          if (importParts.length > 0) {
+            const importLayer = importParts[0]
+
+            // 계층이 FSD 구조에 포함되는지 확인
+            if (importLayer in layerPriority && currentLayer in layerPriority) {
+              // 규칙 위반 검사: 하위 계층이 상위 계층을 import하는 경우
+              if (layerPriority[currentLayer] > layerPriority[importLayer]) {
+                console.log(`규칙 위반 발견: ${filePath} -> ${importPath}`)
+                return true
+              }
+
+              // 동일 계층 내 다른 슬라이스 import 검사
+              if (
+                layerPriority[currentLayer] === layerPriority[importLayer] &&
+                importParts.length > 1 &&
+                parts.length > 1 &&
+                importParts[1] !== parts[1]
+              ) {
+                console.log(
+                  `동일 계층 내 다른 슬라이스 import 위반: ${filePath} -> ${importPath}`
+                )
+                return true
+              }
+            }
+          }
+        }
       }
 
-      items.push(item)
-      this.itemsMap.set(childPath, item)
+      // 별칭(@/) import 검사
+      while ((match = aliasImportRegex.exec(content)) !== null) {
+        const importPath = match[1]
+        const importParts = importPath.split("/")
+
+        if (importParts.length > 0) {
+          const importLayer = importParts[0]
+
+          // 계층이 FSD 구조에 포함되는지 확인
+          if (importLayer in layerPriority && currentLayer in layerPriority) {
+            // 규칙 위반 검사: 하위 계층이 상위 계층을 import하는 경우
+            if (layerPriority[currentLayer] > layerPriority[importLayer]) {
+              console.log(`별칭 규칙 위반 발견: ${filePath} -> @/${importPath}`)
+              return true
+            }
+
+            // 동일 계층 내 다른 슬라이스 import 검사
+            if (
+              layerPriority[currentLayer] === layerPriority[importLayer] &&
+              importParts.length > 1 &&
+              parts.length > 1 &&
+              importParts[1] !== parts[1]
+            ) {
+              console.log(
+                `별칭 동일 계층 내 다른 슬라이스 import 위반: ${filePath} -> @/${importPath}`
+              )
+              return true
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`파일 분석 중 오류 발생: ${filePath}`, error)
     }
 
-    return Promise.resolve(items)
+    return false
+  }
+
+  // 폴더 내용 가져오기 함수 수정
+  private async getFolderContents(
+    folderPath: string,
+    parent: FSDItem
+  ): Promise<FSDItem[]> {
+    if (!fs.existsSync(folderPath)) {
+      return []
+    }
+
+    const items: FSDItem[] = []
+    const files = fs.readdirSync(folderPath)
+
+    for (const file of files) {
+      const filePath = path.join(folderPath, file)
+      const stat = fs.statSync(filePath)
+      const uri = vscode.Uri.file(filePath)
+
+      // 규칙 위반 검사 (파일인 경우만)
+      const violatesRules =
+        !stat.isDirectory() && this.checkFSDRuleViolation(filePath)
+
+      const collapsibleState = stat.isDirectory()
+        ? vscode.TreeItemCollapsibleState.Collapsed
+        : vscode.TreeItemCollapsibleState.None
+
+      const item = new FSDItem(
+        file,
+        collapsibleState,
+        uri,
+        parent,
+        violatesRules
+      )
+      items.push(item)
+      this.itemsMap.set(filePath, item)
+    }
+
+    return items
   }
 }
