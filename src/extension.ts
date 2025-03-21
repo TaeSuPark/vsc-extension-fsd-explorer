@@ -324,10 +324,39 @@ async function createDomain(): Promise<void> {
 
   // 레이어 구조 설정 가져오기
   const layerStructure = config.get("layerStructure") || {
-    entities: { model: true, api: true, ui: false },
-    features: { model: true, api: true, ui: true },
-    pages: { model: true, api: false, ui: true, createComponent: true },
-    widgets: { model: true, api: false, ui: true },
+    entities: {
+      model: true,
+      api: true,
+      ui: false,
+      lib: false,
+      config: false,
+      consts: false,
+    },
+    features: {
+      model: true,
+      api: true,
+      ui: true,
+      lib: false,
+      config: false,
+      consts: false,
+    },
+    pages: {
+      model: true,
+      api: false,
+      ui: true,
+      createComponent: true,
+      lib: false,
+      config: false,
+      consts: false,
+    },
+    widgets: {
+      model: true,
+      api: false,
+      ui: true,
+      lib: false,
+      config: false,
+      consts: false,
+    },
   }
 
   // 도메인 생성
@@ -390,6 +419,24 @@ async function createDomain(): Promise<void> {
       if (layerConfig.ui) {
         const uiPath = path.join(domainPath, "ui")
         await createFolderIfNotExists(uiPath)
+      }
+
+      // lib 폴더 생성
+      if (layerConfig.lib) {
+        const libPath = path.join(domainPath, "lib")
+        await createFolderIfNotExists(libPath)
+      }
+
+      // config 폴더 생성
+      if (layerConfig.config) {
+        const configPath = path.join(domainPath, "config")
+        await createFolderIfNotExists(configPath)
+      }
+
+      // consts 폴더 생성
+      if (layerConfig.consts) {
+        const constsPath = path.join(domainPath, "consts")
+        await createFolderIfNotExists(constsPath)
       }
 
       // pages 레이어에서 컴포넌트 생성
@@ -548,18 +595,40 @@ async function getSettingsWebviewContent(
   }
 
   const defaultLayerStructure = {
-    entities: { model: true, api: true, ui: false, lib: false },
-    features: { model: true, api: true, ui: true, lib: false },
+    entities: {
+      model: true,
+      api: true,
+      ui: false,
+      lib: false,
+      config: false,
+      consts: false,
+    },
+    features: {
+      model: true,
+      api: true,
+      ui: true,
+      lib: false,
+      config: false,
+      consts: false,
+    },
     pages: {
       model: true,
       api: false,
       ui: true,
       lib: false,
+      config: false,
+      consts: false,
       createComponent: true,
     },
-    widgets: { model: true, api: false, ui: true, lib: false },
+    widgets: {
+      model: true,
+      api: false,
+      ui: true,
+      lib: false,
+      config: false,
+      consts: false,
+    },
   }
-
   // 설정 가져오기 (기본값과 병합)
   // 중요: config.get()이 undefined를 반환할 수 있으므로 기본값을 명시적으로 설정
 
@@ -616,16 +685,22 @@ async function getSettingsWebviewContent(
   const checkedEntitiesApi = layerStructure.entities.api ? "checked" : ""
   const checkedEntitiesUi = layerStructure.entities.ui ? "checked" : ""
   const checkedEntitiesLib = layerStructure.entities.lib ? "checked" : ""
+  const checkedEntitiesConfig = layerStructure.entities.config ? "checked" : ""
+  const checkedEntitiesConsts = layerStructure.entities.consts ? "checked" : ""
 
   const checkedFeaturesModel = layerStructure.features.model ? "checked" : ""
   const checkedFeaturesApi = layerStructure.features.api ? "checked" : ""
   const checkedFeaturesUi = layerStructure.features.ui ? "checked" : ""
   const checkedFeaturesLib = layerStructure.features.lib ? "checked" : ""
+  const checkedFeaturesConfig = layerStructure.features.config ? "checked" : ""
+  const checkedFeaturesConsts = layerStructure.features.consts ? "checked" : ""
 
   const checkedPagesModel = layerStructure.pages.model ? "checked" : ""
   const checkedPagesApi = layerStructure.pages.api ? "checked" : ""
   const checkedPagesUi = layerStructure.pages.ui ? "checked" : ""
   const checkedPagesLib = layerStructure.pages.lib ? "checked" : ""
+  const checkedPagesConfig = layerStructure.pages.config ? "checked" : ""
+  const checkedPagesConsts = layerStructure.pages.consts ? "checked" : ""
   const checkedPagesComponent = layerStructure.pages.createComponent
     ? "checked"
     : ""
@@ -634,6 +709,8 @@ async function getSettingsWebviewContent(
   const checkedWidgetsApi = layerStructure.widgets.api ? "checked" : ""
   const checkedWidgetsUi = layerStructure.widgets.ui ? "checked" : ""
   const checkedWidgetsLib = layerStructure.widgets.lib ? "checked" : ""
+  const checkedWidgetsConfig = layerStructure.widgets.config ? "checked" : ""
+  const checkedWidgetsConsts = layerStructure.widgets.consts ? "checked" : ""
 
   // HTML 템플릿 파일 읽기
   const templatePath = vscode.Uri.joinPath(
@@ -664,20 +741,27 @@ async function getSettingsWebviewContent(
     .replace(/\${checkedEntitiesApi}/g, checkedEntitiesApi)
     .replace(/\${checkedEntitiesUi}/g, checkedEntitiesUi)
     .replace(/\${checkedEntitiesLib}/g, checkedEntitiesLib)
+    .replace(/\${checkedEntitiesConfig}/g, checkedEntitiesConfig)
+    .replace(/\${checkedEntitiesConsts}/g, checkedEntitiesConsts)
     .replace(/\${checkedFeaturesModel}/g, checkedFeaturesModel)
     .replace(/\${checkedFeaturesApi}/g, checkedFeaturesApi)
     .replace(/\${checkedFeaturesUi}/g, checkedFeaturesUi)
     .replace(/\${checkedFeaturesLib}/g, checkedFeaturesLib)
+    .replace(/\${checkedFeaturesConfig}/g, checkedFeaturesConfig)
+    .replace(/\${checkedFeaturesConsts}/g, checkedFeaturesConsts)
     .replace(/\${checkedPagesModel}/g, checkedPagesModel)
     .replace(/\${checkedPagesApi}/g, checkedPagesApi)
     .replace(/\${checkedPagesUi}/g, checkedPagesUi)
     .replace(/\${checkedPagesLib}/g, checkedPagesLib)
+    .replace(/\${checkedPagesConfig}/g, checkedPagesConfig)
+    .replace(/\${checkedPagesConsts}/g, checkedPagesConsts)
     .replace(/\${checkedPagesComponent}/g, checkedPagesComponent)
     .replace(/\${checkedWidgetsModel}/g, checkedWidgetsModel)
     .replace(/\${checkedWidgetsApi}/g, checkedWidgetsApi)
     .replace(/\${checkedWidgetsUi}/g, checkedWidgetsUi)
     .replace(/\${checkedWidgetsLib}/g, checkedWidgetsLib)
-
+    .replace(/\${checkedWidgetsConfig}/g, checkedWidgetsConfig)
+    .replace(/\${checkedWidgetsConsts}/g, checkedWidgetsConsts)
   // UI 메시지 대체
   Object.entries(uiMessages).forEach(([key, value]) => {
     // value를 문자열로 변환

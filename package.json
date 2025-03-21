@@ -117,26 +117,34 @@
               "model": true,
               "api": true,
               "ui": false,
-              "lib": false
+              "lib": false,
+              "config": false,
+              "consts": false
             },
             "features": {
               "model": true,
               "api": true,
               "ui": true,
-              "lib": false
+              "lib": false,
+              "config": false,
+              "consts": false
             },
             "pages": {
               "model": true,
               "api": false,
               "ui": true,
               "lib": false,
+              "config": false,
+              "consts": false,
               "createComponent": true
             },
             "widgets": {
               "model": true,
               "api": false,
               "ui": true,
-              "lib": false
+              "lib": false,
+              "config": false,
+              "consts": false
             }
           },
           "description": "Structure of each layer for domain creation"
