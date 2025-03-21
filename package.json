@@ -38,6 +38,26 @@
         "command": "fsd-creator.refreshExplorer",
         "title": "Refresh FSD Explorer",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "fsd-creator.createFile",
+        "title": "New File",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "fsd-creator.createFolder",
+        "title": "New Folder",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "fsd-creator.rename",
+        "title": "Rename",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "fsd-creator.delete",
+        "title": "Delete",
+        "icon": "$(trash)"
       }
     ],
     "views": {
@@ -69,6 +89,28 @@
           "command": "fsd-creator.refreshExplorer",
           "when": "view == fsdExplorer",
           "group": "navigation@4"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "fsd-creator.createFile",
+          "when": "view == fsdExplorer && viewItem == folder",
+          "group": "navigation@1"
+        },
+        {
+          "command": "fsd-creator.createFolder",
+          "when": "view == fsdExplorer && viewItem == folder",
+          "group": "navigation@2"
+        },
+        {
+          "command": "fsd-creator.rename",
+          "when": "view == fsdExplorer",
+          "group": "7_modification@1"
+        },
+        {
+          "command": "fsd-creator.delete",
+          "when": "view == fsdExplorer",
+          "group": "7_modification@2"
         }
       ]
     },

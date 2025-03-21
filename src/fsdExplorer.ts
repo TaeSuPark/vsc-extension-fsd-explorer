@@ -14,6 +14,12 @@ export class FSDItem extends vscode.TreeItem {
     this.tooltip = resourceUri.fsPath
     this.resourceUri = resourceUri // 리소스 URI 설정 (VS Code가 자동으로 현재 파일 강조에 사용)
 
+    // 컨텍스트 값 설정 (폴더 또는 파일)
+    this.contextValue =
+      collapsibleState === vscode.TreeItemCollapsibleState.None
+        ? "file"
+        : "folder"
+
     // 아이콘 설정
     if (collapsibleState === vscode.TreeItemCollapsibleState.None) {
       // 파일인 경우

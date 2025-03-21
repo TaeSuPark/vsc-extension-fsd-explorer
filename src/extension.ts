@@ -3,7 +3,7 @@
 import * as vscode from "vscode"
 import * as fs from "fs"
 import * as path from "path"
-import { FSDExplorer } from "./fsdExplorer"
+import { FSDExplorer, FSDItem } from "./fsdExplorer"
 
 // 다국어 메시지 정의
 const messages = {
@@ -63,6 +63,34 @@ const messages = {
     createDomainDesc: "Create a new slice across selected layers.",
     createDomainButton: "Create Slice",
     openSettingsButton: "Open Settings",
+
+    // 파일 시스템 명령어
+    noActiveEditor: "No active editor",
+    notAFolder: "Selected item is not a folder",
+    enterFileName: "Enter file name",
+    newFilePrompt: "Enter the name of the new file",
+    fileNameRequired: "File name is required",
+    invalidFileName: "File name cannot contain path separators",
+    fileAlreadyExists: "A file with this name already exists",
+    enterFolderName: "Enter folder name",
+    newFolderPrompt: "Enter the name of the new folder",
+    folderNameRequired: "Folder name is required",
+    invalidFolderName: "Folder name cannot contain path separators",
+    folderAlreadyExists: "A folder with this name already exists",
+    errorCreatingFile: "Error creating file",
+    errorCreatingFolder: "Error creating folder",
+    errorRenaming: "Error renaming item",
+    errorDeleting: "Error deleting item",
+    confirmDeleteFolder:
+      "Are you sure you want to delete the folder '{0}' and all its contents?",
+    confirmDeleteFile: "Are you sure you want to delete the file '{0}'?",
+    delete: "Delete",
+    noItemSelected: "No item selected",
+    enterNewName: "Enter new name",
+    renamePrompt: "Enter the new name",
+    nameRequired: "Name is required",
+    invalidName: "Name cannot contain path separators",
+    itemAlreadyExists: "An item with this name already exists",
   },
   ko: {
     // 일반 메시지
@@ -120,6 +148,33 @@ const messages = {
     createDomainDesc: "선택한 레이어에 새 슬라이스를 생성합니다.",
     createDomainButton: "슬라이스 생성",
     openSettingsButton: "설정 열기",
+
+    // 파일 시스템 명령어
+    noActiveEditor: "활성화된 편집기가 없습니다",
+    notAFolder: "선택한 항목이 폴더가 아닙니다",
+    enterFileName: "파일 이름 입력",
+    newFilePrompt: "새 파일의 이름을 입력하세요",
+    fileNameRequired: "파일 이름은 필수입니다",
+    invalidFileName: "파일 이름에 경로 구분자를 포함할 수 없습니다",
+    fileAlreadyExists: "이 이름의 파일이 이미 존재합니다",
+    enterFolderName: "폴더 이름 입력",
+    newFolderPrompt: "새 폴더의 이름을 입력하세요",
+    folderNameRequired: "폴더 이름은 필수입니다",
+    invalidFolderName: "폴더 이름에 경로 구분자를 포함할 수 없습니다",
+    folderAlreadyExists: "이 이름의 폴더가 이미 존재합니다",
+    errorCreatingFile: "파일 생성 중 오류 발생",
+    errorCreatingFolder: "폴더 생성 중 오류 발생",
+    errorRenaming: "이름 변경 중 오류 발생",
+    errorDeleting: "항목 삭제 중 오류 발생",
+    confirmDeleteFolder: "폴더 '{0}'과(와) 모든 내용을 삭제하시겠습니까?",
+    confirmDeleteFile: "파일 '{0}'을(를) 삭제하시겠습니까?",
+    delete: "삭제",
+    noItemSelected: "선택된 항목이 없습니다",
+    enterNewName: "새 이름 입력",
+    renamePrompt: "새 이름을 입력하세요",
+    nameRequired: "이름은 필수입니다",
+    invalidName: "이름에 경로 구분자를 포함할 수 없습니다",
+    itemAlreadyExists: "이 이름의 항목이 이미 존재합니다",
   },
 }
 
@@ -843,6 +898,233 @@ async function createSettingsWebview(context: vscode.ExtensionContext) {
   return panel
 }
 
+// 파일 생성 명령어
+async function createFile(fileItem: FSDItem) {
+  if (!fileItem) {
+    const activeEditor = vscode.window.activeTextEditor
+    if (!activeEditor) {
+      vscode.window.showErrorMessage(getMessage("noActiveEditor"))
+      return
+    }
+
+    // 현재 열린 파일의 디렉토리를 기본 위치로 사용
+    const currentFilePath = activeEditor.document.uri.fsPath
+    const currentDir = path.dirname(currentFilePath)
+    fileItem = {
+      resourceUri: vscode.Uri.file(currentDir),
+      contextValue: "folder",
+    } as FSDItem
+  }
+
+  // 폴더인지 확인
+  if (fileItem.contextValue !== "folder") {
+    vscode.window.showErrorMessage(getMessage("notAFolder"))
+    return
+  }
+
+  // 파일 이름 입력 받기
+  const fileName = await vscode.window.showInputBox({
+    placeHolder: getMessage("enterFileName"),
+    prompt: getMessage("newFilePrompt"),
+    validateInput: (value) => {
+      if (!value) {
+        return getMessage("fileNameRequired")
+      }
+      if (value.includes("/") || value.includes("\\")) {
+        return getMessage("invalidFileName")
+      }
+      return null
+    },
+  })
+
+  if (!fileName) {
+    return // 취소됨
+  }
+
+  // 파일 경로 생성
+  const filePath = path.join(fileItem.resourceUri.fsPath, fileName)
+
+  // 파일이 이미 존재하는지 확인
+  if (fs.existsSync(filePath)) {
+    vscode.window.showErrorMessage(getMessage("fileAlreadyExists"))
+    return
+  }
+
+  // 파일 생성
+  try {
+    fs.writeFileSync(filePath, "")
+
+    // 생성된 파일 열기
+    const document = await vscode.workspace.openTextDocument(filePath)
+    await vscode.window.showTextDocument(document)
+
+    // FSD Explorer 새로고침
+    vscode.commands.executeCommand("fsd-creator.refreshExplorer")
+  } catch (error) {
+    vscode.window.showErrorMessage(
+      `${getMessage("errorCreatingFile")}: ${error}`
+    )
+  }
+}
+
+// 폴더 생성 명령어
+async function createFolder(fileItem: FSDItem) {
+  if (!fileItem) {
+    const activeEditor = vscode.window.activeTextEditor
+    if (!activeEditor) {
+      vscode.window.showErrorMessage(getMessage("noActiveEditor"))
+      return
+    }
+
+    // 현재 열린 파일의 디렉토리를 기본 위치로 사용
+    const currentFilePath = activeEditor.document.uri.fsPath
+    const currentDir = path.dirname(currentFilePath)
+    fileItem = {
+      resourceUri: vscode.Uri.file(currentDir),
+      contextValue: "folder",
+    } as FSDItem
+  }
+
+  // 폴더인지 확인
+  if (fileItem.contextValue !== "folder") {
+    vscode.window.showErrorMessage(getMessage("notAFolder"))
+    return
+  }
+
+  // 폴더 이름 입력 받기
+  const folderName = await vscode.window.showInputBox({
+    placeHolder: getMessage("enterFolderName"),
+    prompt: getMessage("newFolderPrompt"),
+    validateInput: (value) => {
+      if (!value) {
+        return getMessage("folderNameRequired")
+      }
+      if (value.includes("/") || value.includes("\\")) {
+        return getMessage("invalidFolderName")
+      }
+      return null
+    },
+  })
+
+  if (!folderName) {
+    return // 취소됨
+  }
+
+  // 폴더 경로 생성
+  const folderPath = path.join(fileItem.resourceUri.fsPath, folderName)
+
+  // 폴더가 이미 존재하는지 확인
+  if (fs.existsSync(folderPath)) {
+    vscode.window.showErrorMessage(getMessage("folderAlreadyExists"))
+    return
+  }
+
+  // 폴더 생성
+  try {
+    fs.mkdirSync(folderPath)
+
+    // FSD Explorer 새로고침
+    vscode.commands.executeCommand("fsd-creator.refreshExplorer")
+  } catch (error) {
+    vscode.window.showErrorMessage(
+      `${getMessage("errorCreatingFolder")}: ${error}`
+    )
+  }
+}
+
+// 이름 변경 명령어
+async function rename(fileItem: FSDItem) {
+  if (!fileItem) {
+    vscode.window.showErrorMessage(getMessage("noItemSelected"))
+    return
+  }
+
+  const oldPath = fileItem.resourceUri.fsPath
+  const oldName = path.basename(oldPath)
+  const parentDir = path.dirname(oldPath)
+
+  // 새 이름 입력 받기
+  const newName = await vscode.window.showInputBox({
+    value: oldName,
+    placeHolder: getMessage("enterNewName"),
+    prompt: getMessage("renamePrompt"),
+    validateInput: (value) => {
+      if (!value) {
+        return getMessage("nameRequired")
+      }
+      if (value.includes("/") || value.includes("\\")) {
+        return getMessage("invalidName")
+      }
+      return null
+    },
+  })
+
+  if (!newName || newName === oldName) {
+    return // 취소되거나 이름이 변경되지 않음
+  }
+
+  // 새 경로 생성
+  const newPath = path.join(parentDir, newName)
+
+  // 이미 존재하는지 확인
+  if (fs.existsSync(newPath)) {
+    vscode.window.showErrorMessage(getMessage("itemAlreadyExists"))
+    return
+  }
+
+  // 이름 변경
+  try {
+    fs.renameSync(oldPath, newPath)
+
+    // FSD Explorer 새로고침
+    vscode.commands.executeCommand("fsd-creator.refreshExplorer")
+  } catch (error) {
+    vscode.window.showErrorMessage(`${getMessage("errorRenaming")}: ${error}`)
+  }
+}
+
+// 삭제 명령어
+async function deleteItem(fileItem: FSDItem) {
+  if (!fileItem) {
+    vscode.window.showErrorMessage(getMessage("noItemSelected"))
+    return
+  }
+
+  const itemPath = fileItem.resourceUri.fsPath
+  const itemName = path.basename(itemPath)
+  const isDirectory = fileItem.contextValue === "folder"
+
+  // 확인 메시지
+  const confirmMessage = isDirectory
+    ? getMessage("confirmDeleteFolder").replace("{0}", itemName)
+    : getMessage("confirmDeleteFile").replace("{0}", itemName)
+
+  const confirmed = await vscode.window.showWarningMessage(
+    confirmMessage,
+    { modal: true },
+    getMessage("delete")
+  )
+
+  if (confirmed !== getMessage("delete")) {
+    return // 취소됨
+  }
+
+  // 삭제
+  try {
+    if (isDirectory) {
+      // 재귀적으로 폴더 삭제
+      fs.rmdirSync(itemPath, { recursive: true })
+    } else {
+      fs.unlinkSync(itemPath)
+    }
+
+    // FSD Explorer 새로고침
+    vscode.commands.executeCommand("fsd-creator.refreshExplorer")
+  } catch (error) {
+    vscode.window.showErrorMessage(`${getMessage("errorDeleting")}: ${error}`)
+  }
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -897,6 +1179,27 @@ export function activate(context: vscode.ExtensionContext) {
     () => fsdExplorer.refresh()
   )
 
+  // 파일 시스템 명령어 등록
+  const createFileDisposable = vscode.commands.registerCommand(
+    "fsd-creator.createFile",
+    createFile
+  )
+
+  const createFolderDisposable = vscode.commands.registerCommand(
+    "fsd-creator.createFolder",
+    createFolder
+  )
+
+  const renameDisposable = vscode.commands.registerCommand(
+    "fsd-creator.rename",
+    rename
+  )
+
+  const deleteDisposable = vscode.commands.registerCommand(
+    "fsd-creator.delete",
+    deleteItem
+  )
+
   // 확장 프로그램이 비활성화될 때 리소스 해제
   context.subscriptions.push(
     helloWorldDisposable,
@@ -905,7 +1208,11 @@ export function activate(context: vscode.ExtensionContext) {
     openSettingsDisposable,
     refreshExplorerDisposable,
     treeView,
-    { dispose: () => fsdExplorer.dispose() }
+    { dispose: () => fsdExplorer.dispose() },
+    createFileDisposable,
+    createFolderDisposable,
+    renameDisposable,
+    deleteDisposable
   )
 }
 
