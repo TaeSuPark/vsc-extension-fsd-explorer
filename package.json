@@ -26,7 +26,7 @@
       },
       {
         "command": "fsd-creator.createDomain",
-        "title": "FSD: Create Domain",
+        "title": "FSD: Create Slice",
         "icon": "$(add)"
       },
       {
@@ -108,7 +108,7 @@
             "pages": true,
             "widgets": true
           },
-          "description": "Layers available for domain creation"
+          "description": "Layers available for slice creation"
         },
         "fsd-creator.layerStructure": {
           "type": "object",

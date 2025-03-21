@@ -21,24 +21,24 @@ const messages = {
     foldersCreated: "FSD Creator: The following folders have been created: ",
     foldersExist: "FSD Creator: The following folders already exist: ",
 
-    // 도메인 생성 관련
+    // 슬라이스 생성 관련
     initFirst:
       "FSD Creator: src folder not found. Please initialize FSD structure first.",
-    domainNamePlaceholder: "Enter domain name (e.g., User, Auth, Product)",
-    domainNamePrompt: "Enter the name of the domain to create",
-    domainNameRequired: "Domain name is required.",
+    domainNamePlaceholder: "Enter slice name (e.g., User, Auth, Product)",
+    domainNamePrompt: "Enter the name of the slice to create",
+    domainNameRequired: "Slice name is required.",
     domainNameInvalid:
-      "Domain name must start with a letter and contain only letters, numbers, and hyphens.",
-    domainCreationCancelled: "FSD Creator: Domain creation cancelled.",
-    selectLayersPlaceholder: "Select layers to create the domain in",
+      "Slice name must start with a letter and contain only letters, numbers, and hyphens.",
+    domainCreationCancelled: "FSD Creator: Slice creation cancelled.",
+    selectLayersPlaceholder: "Select layers to create the slice in",
     layerSelectionCancelled: "FSD Creator: Layer selection cancelled.",
-    domainsCreated: "FSD Creator: The following domains have been created: ",
-    domainsExist: "FSD Creator: The following domains already exist: ",
-    domainsError: "FSD Creator: Error creating the following domains: ",
+    domainsCreated: "FSD Creator: The following slices have been created: ",
+    domainsExist: "FSD Creator: The following slices already exist: ",
+    domainsError: "FSD Creator: Error creating the following slices: ",
 
     // 파일 내용 관련
-    domainEntryPoint: "Entry point for the domain",
-    interfaceDefinition: "Interface definition for the domain",
+    domainEntryPoint: "Entry point for the slice",
+    interfaceDefinition: "Interface definition for the slice",
     addPropsHere: "Add interface properties here",
     componentPage: "page",
     addComponentContent: "Add component content here",
@@ -49,8 +49,8 @@ const messages = {
     language: "Language",
     fsdInitialization: "FSD Initialization",
     foldersToCreate: "Folders to create when initializing",
-    domainCreation: "Domain Creation",
-    layersAvailable: "Layers available for domain creation",
+    domainCreation: "Slice Creation",
+    layersAvailable: "Layers available for slice creation",
     layerStructure: "Layer Structure",
     createComponent: "create component",
     saveSettings: "Save Settings",
@@ -60,8 +60,8 @@ const messages = {
     // 사이드바 관련
     initializeFsd: "Initialize FSD Architecture structure in your project.",
     initializeFsdButton: "Initialize FSD",
-    createDomainDesc: "Create a new domain across selected layers.",
-    createDomainButton: "Create Domain",
+    createDomainDesc: "Create a new slice across selected layers.",
+    createDomainButton: "Create Slice",
     openSettingsButton: "Open Settings",
   },
   ko: {
@@ -77,24 +77,25 @@ const messages = {
     foldersCreated: "FSD Creator: 다음 폴더가 생성되었습니다: ",
     foldersExist: "FSD Creator: 다음 폴더는 이미 존재합니다: ",
 
-    // 도메인 생성 관련
+    // 슬라이스 생성 관련
     initFirst:
       "FSD Creator: src 폴더가 없습니다. 먼저 FSD 구조를 초기화해주세요.",
-    domainNamePlaceholder: "도메인 이름을 입력하세요 (예: User, Auth, Product)",
-    domainNamePrompt: "생성할 도메인의 이름을 입력하세요",
-    domainNameRequired: "도메인 이름은 필수입니다.",
+    domainNamePlaceholder:
+      "슬라이스 이름을 입력하세요 (예: User, Auth, Product)",
+    domainNamePrompt: "생성할 슬라이스의 이름을 입력하세요",
+    domainNameRequired: "슬라이스 이름은 필수입니다.",
     domainNameInvalid:
-      "도메인 이름은 알파벳으로 시작하고, 알파벳, 숫자, 하이픈만 포함해야 합니다.",
-    domainCreationCancelled: "FSD Creator: 도메인 생성이 취소되었습니다.",
-    selectLayersPlaceholder: "도메인을 생성할 레이어를 선택하세요",
+      "슬라이스 이름은 알파벳으로 시작하고, 알파벳, 숫자, 하이픈만 포함해야 합니다.",
+    domainCreationCancelled: "FSD Creator: 슬라이스 생성이 취소되었습니다.",
+    selectLayersPlaceholder: "슬라이스를 생성할 레이어를 선택하세요",
     layerSelectionCancelled: "FSD Creator: 레이어 선택이 취소되었습니다.",
-    domainsCreated: "FSD Creator: 다음 도메인이 생성되었습니다: ",
-    domainsExist: "FSD Creator: 다음 도메인은 이미 존재합니다: ",
-    domainsError: "FSD Creator: 다음 도메인 생성 중 오류가 발생했습니다: ",
+    domainsCreated: "FSD Creator: 다음 슬라이스가 생성되었습니다: ",
+    domainsExist: "FSD Creator: 다음 슬라이스는 이미 존재합니다: ",
+    domainsError: "FSD Creator: 다음 슬라이스 생성 중 오류가 발생했습니다: ",
 
     // 파일 내용 관련
-    domainEntryPoint: "도메인의 진입점",
-    interfaceDefinition: "도메인의 인터페이스 정의",
+    domainEntryPoint: "슬라이스의 진입점",
+    interfaceDefinition: "슬라이스의 인터페이스 정의",
     addPropsHere: "여기에 인터페이스 속성을 정의하세요",
     componentPage: "페이지",
     addComponentContent: "여기에 컴포넌트 내용을 추가하세요",
@@ -105,8 +106,8 @@ const messages = {
     language: "언어",
     fsdInitialization: "FSD 초기화",
     foldersToCreate: "초기화 시 생성할 폴더",
-    domainCreation: "도메인 생성",
-    layersAvailable: "도메인 생성에 사용할 레이어",
+    domainCreation: "슬라이스 생성",
+    layersAvailable: "슬라이스 생성에 사용할 레이어",
     layerStructure: "레이어 구조",
     createComponent: "컴포넌트 생성",
     saveSettings: "설정 저장",
@@ -116,8 +117,8 @@ const messages = {
     // 사이드바 관련
     initializeFsd: "프로젝트에 FSD 아키텍처 구조를 초기화합니다.",
     initializeFsdButton: "FSD 초기화",
-    createDomainDesc: "선택한 레이어에 새 도메인을 생성합니다.",
-    createDomainButton: "도메인 생성",
+    createDomainDesc: "선택한 레이어에 새 슬라이스를 생성합니다.",
+    createDomainButton: "슬라이스 생성",
     openSettingsButton: "설정 열기",
   },
 }
@@ -147,7 +148,7 @@ const FSD_FOLDERS = [
   "app",
 ]
 
-// 도메인 생성 가능한 레이어
+// 슬라이스 생성 가능한 레이어
 const DOMAIN_LAYERS = FSD_FOLDERS.filter(
   (layer) => layer !== "shared" && layer !== "app"
 )
@@ -259,8 +260,8 @@ async function initializeFsdStructure(): Promise<void> {
   vscode.commands.executeCommand("fsd-creator.refreshExplorer")
 }
 
-// 도메인 생성 함수
-async function createDomain(): Promise<void> {
+// 슬라이스 생성 함수
+async function createSlice(): Promise<void> {
   // 현재 워크스페이스 가져오기
   const workspaceFolders = vscode.workspace.workspaceFolders
   if (!workspaceFolders) {
@@ -277,8 +278,8 @@ async function createDomain(): Promise<void> {
     return
   }
 
-  // 도메인 이름 입력 받기
-  const domainName = await vscode.window.showInputBox({
+  // 슬라이스 이름 입력 받기
+  const sliceName = await vscode.window.showInputBox({
     placeHolder: getMessage("domainNamePlaceholder"),
     prompt: getMessage("domainNamePrompt"),
     validateInput: (value) => {
@@ -292,14 +293,16 @@ async function createDomain(): Promise<void> {
     },
   })
 
-  if (!domainName) {
+  if (!sliceName) {
     vscode.window.showInformationMessage(getMessage("domainCreationCancelled"))
     return
   }
 
-  // 설정에서 도메인 생성 가능한 레이어 가져오기
+  // 설정에서 슬라이스 생성 가능한 레이어 가져오기
   const config = vscode.workspace.getConfiguration("fsd-creator")
-  const domainLayers = config.get<Record<string, boolean>>("domainLayers") || {
+  const availableLayers = config.get<Record<string, boolean>>(
+    "domainLayers"
+  ) || {
     entities: true,
     features: true,
     pages: true,
@@ -307,12 +310,12 @@ async function createDomain(): Promise<void> {
   }
 
   // 선택 가능한 레이어 필터링
-  const availableLayers = Object.entries(domainLayers)
+  const layerOptions = Object.entries(availableLayers)
     .filter(([_, enabled]) => enabled)
     .map(([layer]) => layer)
 
   // 레이어 선택 (다중 선택 가능)
-  const selectedLayers = await vscode.window.showQuickPick(availableLayers, {
+  const selectedLayers = await vscode.window.showQuickPick(layerOptions, {
     placeHolder: getMessage("selectLayersPlaceholder"),
     canPickMany: true,
   })
@@ -359,47 +362,47 @@ async function createDomain(): Promise<void> {
     },
   }
 
-  // 도메인 생성
-  const createdDomains: string[] = []
-  const existingDomains: string[] = []
-  const errorDomains: string[] = []
+  // 슬라이스 생성
+  const createdSlices: string[] = []
+  const existingSlices: string[] = []
+  const errorSlices: string[] = []
 
   for (const layer of selectedLayers) {
     try {
-      const domainPath = path.join(srcPath, layer, domainName)
-      const indexFilePath = path.join(domainPath, "index.ts")
+      const slicePath = path.join(srcPath, layer, sliceName)
+      const indexFilePath = path.join(slicePath, "index.ts")
 
-      // 도메인 폴더가 이미 존재하는지 확인
-      if (fs.existsSync(domainPath)) {
-        existingDomains.push(`${layer}/${domainName}`)
+      // 슬라이스 폴더가 이미 존재하는지 확인
+      if (fs.existsSync(slicePath)) {
+        existingSlices.push(`${layer}/${sliceName}`)
         continue
       }
 
-      // 도메인 폴더 생성
-      await createFolderIfNotExists(domainPath)
+      // 슬라이스 폴더 생성
+      await createFolderIfNotExists(slicePath)
 
       // 레이어별 구조 설정 가져오기
       const layerConfig = (layerStructure as any)[layer] || { model: true }
 
       // model 폴더 및 interface.ts 생성
       if (layerConfig.model) {
-        const modelPath = path.join(domainPath, "model")
+        const modelPath = path.join(slicePath, "model")
         await createFolderIfNotExists(modelPath)
 
-        // 도메인 이름과 레이어 이름을 PascalCase로 변환
-        const pascalDomainName = domainName
+        // 슬라이스 이름과 레이어 이름을 PascalCase로 변환
+        const pascalSliceName = sliceName
           .split("-")
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
           .join("")
 
         const pascalLayerName = layer.charAt(0).toUpperCase() + layer.slice(1)
 
-        // 인터페이스 이름 생성 (I{Layer}{Domain} 형식)
-        const interfaceName = `I${pascalLayerName}${pascalDomainName}`
+        // 인터페이스 이름 생성 (I{Layer}{Slice} 형식)
+        const interfaceName = `I${pascalLayerName}${pascalSliceName}`
 
         const interfaceContent = `// ${getMessage(
           "interfaceDefinition"
-        )} ${layer}/${domainName}\n\nexport interface ${interfaceName} {\n  // ${getMessage(
+        )} ${layer}/${sliceName}\n\nexport interface ${interfaceName} {\n  // ${getMessage(
           "addPropsHere"
         )}\n}\n`
 
@@ -411,44 +414,44 @@ async function createDomain(): Promise<void> {
 
       // api 폴더 생성
       if (layerConfig.api) {
-        const apiPath = path.join(domainPath, "api")
+        const apiPath = path.join(slicePath, "api")
         await createFolderIfNotExists(apiPath)
       }
 
       // ui 폴더 생성
       if (layerConfig.ui) {
-        const uiPath = path.join(domainPath, "ui")
+        const uiPath = path.join(slicePath, "ui")
         await createFolderIfNotExists(uiPath)
       }
 
       // lib 폴더 생성
       if (layerConfig.lib) {
-        const libPath = path.join(domainPath, "lib")
+        const libPath = path.join(slicePath, "lib")
         await createFolderIfNotExists(libPath)
       }
 
       // config 폴더 생성
       if (layerConfig.config) {
-        const configPath = path.join(domainPath, "config")
+        const configPath = path.join(slicePath, "config")
         await createFolderIfNotExists(configPath)
       }
 
       // consts 폴더 생성
       if (layerConfig.consts) {
-        const constsPath = path.join(domainPath, "consts")
+        const constsPath = path.join(slicePath, "consts")
         await createFolderIfNotExists(constsPath)
       }
 
       // pages 레이어에서 컴포넌트 생성
       if (layer === "pages" && layerConfig.createComponent) {
         // 컴포넌트 이름 생성 (PascalCase)
-        const componentName = domainName
+        const componentName = sliceName
           .split("-")
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
           .join("")
 
         // 컴포넌트 파일 경로
-        const componentFilePath = path.join(domainPath, `${componentName}.tsx`)
+        const componentFilePath = path.join(slicePath, `${componentName}.tsx`)
 
         // 컴포넌트 기본 내용 생성
         const componentContent = `\nexport const ${componentName} = () => {\n  return (\n    <>\n      <h1>${componentName} ${getMessage(
@@ -463,32 +466,32 @@ async function createDomain(): Promise<void> {
       // index.ts 파일 생성
       const indexContent = `// ${getMessage(
         "domainEntryPoint"
-      )} ${layer}/${domainName}\n\nexport {};\n`
+      )} ${layer}/${sliceName}\n\nexport {};\n`
       await createFileIfNotExists(indexFilePath, indexContent)
 
-      createdDomains.push(`${layer}/${domainName}`)
+      createdSlices.push(`${layer}/${sliceName}`)
     } catch (error) {
-      errorDomains.push(`${layer}/${domainName}`)
-      console.error(`Error creating domain ${layer}/${domainName}:`, error)
+      errorSlices.push(`${layer}/${sliceName}`)
+      console.error(`Error creating slice ${sliceName} in ${layer}:`, error)
     }
   }
 
   // 결과 메시지 표시
-  if (createdDomains.length > 0) {
+  if (createdSlices.length > 0) {
     vscode.window.showInformationMessage(
-      `${getMessage("domainsCreated")}${createdDomains.join(", ")}`
+      `${getMessage("domainsCreated")}${createdSlices.join(", ")}`
     )
   }
 
-  if (existingDomains.length > 0) {
+  if (existingSlices.length > 0) {
     vscode.window.showInformationMessage(
-      `${getMessage("domainsExist")}${existingDomains.join(", ")}`
+      `${getMessage("domainsExist")}${existingSlices.join(", ")}`
     )
   }
 
-  if (errorDomains.length > 0) {
+  if (errorSlices.length > 0) {
     vscode.window.showErrorMessage(
-      `${getMessage("domainsError")}${errorDomains.join(", ")}`
+      `${getMessage("domainsError")}${errorSlices.join(", ")}`
     )
   }
 
@@ -860,10 +863,10 @@ export function activate(context: vscode.ExtensionContext) {
     initializeFsdStructure
   )
 
-  // 도메인 생성 명령어 등록
-  const createDomainDisposable = vscode.commands.registerCommand(
+  // 슬라이스 생성 명령어 등록
+  const createSliceDisposable = vscode.commands.registerCommand(
     "fsd-creator.createDomain",
-    createDomain
+    createSlice
   )
 
   // 설정 명령어 등록
@@ -898,11 +901,11 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     helloWorldDisposable,
     initFsdDisposable,
-    createDomainDisposable,
+    createSliceDisposable,
     openSettingsDisposable,
     refreshExplorerDisposable,
     treeView,
-    { dispose: () => fsdExplorer.dispose() } // FSDExplorer 리소스 해제
+    { dispose: () => fsdExplorer.dispose() }
   )
 }
 
