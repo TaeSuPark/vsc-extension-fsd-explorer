@@ -68,6 +68,11 @@
         "command": "fsd-creator.openFile",
         "title": "Open File",
         "icon": "$(go-to-file)"
+      },
+      {
+        "command": "fsd-creator.showViolations",
+        "title": "Show FSD Rule Violations",
+        "icon": "$(warning)"
       }
     ],
     "views": {
@@ -99,6 +104,11 @@
           "command": "fsd-creator.refreshExplorer",
           "when": "view == fsdExplorer",
           "group": "navigation@4"
+        },
+        {
+          "command": "fsd-creator.showViolations",
+          "when": "view == fsdExplorer",
+          "group": "navigation"
         }
       ],
       "view/item/context": [

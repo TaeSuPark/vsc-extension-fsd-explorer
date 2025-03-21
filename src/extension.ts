@@ -1125,23 +1125,6 @@ async function deleteItem(fileItem: FSDItem) {
   }
 }
 
-// FSD 규칙 위반 파일 수정 명령어
-const fixFsdViolationDisposable = vscode.commands.registerCommand(
-  "fsd-creator.fixViolation",
-  async (item: FSDItem) => {
-    if (item.violatesRules) {
-      // 파일 열기 (미리보기 모드가 아닌 완전히 열기)
-      const document = await vscode.workspace.openTextDocument(item.resourceUri)
-      await vscode.window.showTextDocument(document, { preview: false })
-
-      // 사용자에게 안내 메시지 표시
-      vscode.window.showInformationMessage(
-        `FSD 규칙 위반: 하위 계층은 상위 계층을 import할 수 없습니다. 파일을 수정해주세요.`
-      )
-    }
-  }
-)
-
 // 파일 열기 명령어 등록
 const openFileDisposable = vscode.commands.registerCommand(
   "fsd-creator.openFile",
@@ -1156,6 +1139,9 @@ const openFileDisposable = vscode.commands.registerCommand(
     }
   }
 )
+
+// 전역 변수로 FSD Explorer 인스턴스 선언
+let fsdExplorerInstance: FSDExplorer
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -1198,17 +1184,19 @@ export function activate(context: vscode.ExtensionContext) {
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : undefined
 
-  const fsdExplorer = new FSDExplorer(workspaceRoot)
+  // 전역 변수에 할당
+  fsdExplorerInstance = new FSDExplorer(workspaceRoot)
+
   const treeView = vscode.window.createTreeView("fsdExplorer", {
-    treeDataProvider: fsdExplorer,
+    treeDataProvider: fsdExplorerInstance,
     showCollapseAll: true,
   })
-  fsdExplorer.setTreeView(treeView)
+  fsdExplorerInstance.setTreeView(treeView)
 
   // 리프레시 명령어 등록
   const refreshExplorerDisposable = vscode.commands.registerCommand(
     "fsd-creator.refreshExplorer",
-    () => fsdExplorer.refresh()
+    () => fsdExplorerInstance.refresh()
   )
 
   // 파일 시스템 명령어 등록
@@ -1251,6 +1239,49 @@ export function activate(context: vscode.ExtensionContext) {
     }
   )
 
+  // 규칙 위반 표시 명령어
+  const showViolationsDisposable = vscode.commands.registerCommand(
+    "fsd-creator.showViolations",
+    async (item?: FSDItem) => {
+      // 모든 규칙 위반 파일 찾기
+      const violations: FSDItem[] = []
+
+      // 특정 폴더 내 위반 사항만 찾을지, 전체 위반 사항을 찾을지 결정
+      const searchPath = item ? item.resourceUri.fsPath : undefined
+
+      // 전역 변수 사용
+      fsdExplorerInstance.findViolations(violations, searchPath)
+
+      if (violations.length === 0) {
+        vscode.window.showInformationMessage("FSD 규칙 위반이 없습니다.")
+        return
+      }
+
+      // 위반 항목 목록 표시
+      const items = violations.map((v) => ({
+        label: path.basename(v.resourceUri.fsPath),
+        description: path.relative(
+          vscode.workspace.workspaceFolders?.[0].uri.fsPath || "",
+          v.resourceUri.fsPath
+        ),
+        item: v,
+      }))
+
+      const selected = await vscode.window.showQuickPick(items, {
+        placeHolder: "규칙 위반 파일 선택",
+        title: `FSD 규칙 위반 (${violations.length}개)`,
+      })
+
+      if (selected) {
+        // 선택한 파일 열기
+        const document = await vscode.workspace.openTextDocument(
+          selected.item.resourceUri
+        )
+        await vscode.window.showTextDocument(document, { preview: false })
+      }
+    }
+  )
+
   // 확장 프로그램이 비활성화될 때 리소스 해제
   context.subscriptions.push(
     helloWorldDisposable,
@@ -1259,13 +1290,14 @@ export function activate(context: vscode.ExtensionContext) {
     openSettingsDisposable,
     refreshExplorerDisposable,
     treeView,
-    { dispose: () => fsdExplorer.dispose() },
+    { dispose: () => fsdExplorerInstance.dispose() },
     createFileDisposable,
     createFolderDisposable,
     renameDisposable,
     deleteDisposable,
     fixFsdViolationDisposable,
-    openFileDisposable
+    openFileDisposable,
+    showViolationsDisposable
   )
 }
 

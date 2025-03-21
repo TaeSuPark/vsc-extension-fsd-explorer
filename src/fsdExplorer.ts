@@ -396,4 +396,19 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
 
     return items
   }
+
+  // 규칙 위반 항목 찾기
+  public findViolations(violations: FSDItem[], searchPath?: string): void {
+    for (const [path, item] of this.itemsMap.entries()) {
+      // 특정 경로 내에서만 검색하는 경우
+      if (searchPath && !path.startsWith(searchPath)) {
+        continue
+      }
+
+      // 파일이고 규칙을 위반하는 경우
+      if (item.contextValue === "fsdViolation") {
+        violations.push(item)
+      }
+    }
+  }
 }
