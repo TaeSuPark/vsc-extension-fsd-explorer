@@ -1,76 +1,74 @@
 {
-  "name": "fsd-creator",
-  "displayName": "fsd-creator",
-  "description": "FSD 아키텍처 구조를 쉽게 생성하는 도구",
+  "name": "fsd-explorer",
+  "displayName": "fsd-explorer",
+  "description": "Explorer for creating and inspecting FSD architecture structure",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.97.0"
+    "vscode": "^1.91.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onView:fsdExplorer"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "fsd-creator.helloWorld",
+        "command": "fsd-explorer.helloWorld",
         "title": "Hello World"
       },
       {
-        "command": "fsd-creator.initializeFsd",
+        "command": "fsd-explorer.initializeFsd",
         "title": "FSD: Initialize FSD Structure",
         "icon": "$(project)"
       },
       {
-        "command": "fsd-creator.createDomain",
+        "command": "fsd-explorer.createDomain",
         "title": "FSD: Create Slice",
         "icon": "$(add)"
       },
       {
-        "command": "fsd-creator.openSettings",
+        "command": "fsd-explorer.openSettings",
         "title": "FSD: Open Settings",
         "icon": "$(gear)"
       },
       {
-        "command": "fsd-creator.refreshExplorer",
+        "command": "fsd-explorer.refreshExplorer",
         "title": "Refresh FSD Explorer",
         "icon": "$(refresh)"
       },
       {
-        "command": "fsd-creator.createFile",
+        "command": "fsd-explorer.createFile",
         "title": "New File",
         "icon": "$(new-file)"
       },
       {
-        "command": "fsd-creator.createFolder",
+        "command": "fsd-explorer.createFolder",
         "title": "New Folder",
         "icon": "$(new-folder)"
       },
       {
-        "command": "fsd-creator.rename",
+        "command": "fsd-explorer.rename",
         "title": "Rename",
         "icon": "$(edit)"
       },
       {
-        "command": "fsd-creator.delete",
+        "command": "fsd-explorer.delete",
         "title": "Delete",
         "icon": "$(trash)"
       },
       {
-        "command": "fsd-creator.fixViolation",
+        "command": "fsd-explorer.fixViolation",
         "title": "Fix FSD Rule Violation",
         "icon": "$(tools)"
       },
       {
-        "command": "fsd-creator.openFile",
+        "command": "fsd-explorer.openFile",
         "title": "Open File",
         "icon": "$(go-to-file)"
       },
       {
-        "command": "fsd-creator.showViolations",
+        "command": "fsd-explorer.showViolations",
         "title": "Show FSD Rule Violations",
         "icon": "$(warning)"
       }
@@ -86,68 +84,68 @@
     "menus": {
       "view/title": [
         {
-          "command": "fsd-creator.initializeFsd",
+          "command": "fsd-explorer.initializeFsd",
           "when": "view == fsdExplorer",
           "group": "navigation@1"
         },
         {
-          "command": "fsd-creator.createDomain",
+          "command": "fsd-explorer.createDomain",
           "when": "view == fsdExplorer",
           "group": "navigation@2"
         },
         {
-          "command": "fsd-creator.openSettings",
+          "command": "fsd-explorer.openSettings",
           "when": "view == fsdExplorer",
           "group": "navigation@3"
         },
         {
-          "command": "fsd-creator.refreshExplorer",
+          "command": "fsd-explorer.refreshExplorer",
           "when": "view == fsdExplorer",
           "group": "navigation@4"
         },
         {
-          "command": "fsd-creator.showViolations",
+          "command": "fsd-explorer.showViolations",
           "when": "view == fsdExplorer",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "fsd-creator.createFile",
+          "command": "fsd-explorer.createFile",
           "when": "view == fsdExplorer && viewItem == folder",
           "group": "navigation@1"
         },
         {
-          "command": "fsd-creator.createFolder",
+          "command": "fsd-explorer.createFolder",
           "when": "view == fsdExplorer && viewItem == folder",
           "group": "navigation@2"
         },
         {
-          "command": "fsd-creator.rename",
+          "command": "fsd-explorer.rename",
           "when": "view == fsdExplorer",
           "group": "7_modification@1"
         },
         {
-          "command": "fsd-creator.delete",
+          "command": "fsd-explorer.delete",
           "when": "view == fsdExplorer",
           "group": "7_modification@2"
         },
         {
-          "command": "fsd-creator.fixViolation",
+          "command": "fsd-explorer.fixViolation",
           "when": "view == fsdExplorer && viewItem == fsdViolation",
           "group": "inline"
         },
         {
-          "command": "fsd-creator.openFile",
+          "command": "fsd-explorer.openFile",
           "when": "view == fsdExplorer && (viewItem == file || viewItem == fsdViolation)",
           "group": "navigation"
         }
       ]
     },
     "configuration": {
-      "title": "FSD Creator",
+      "title": "FSD Explorer",
       "properties": {
-        "fsd-creator.language": {
+        "fsd-explorer.language": {
           "type": "string",
           "default": "en",
           "enum": [
@@ -160,7 +158,7 @@
           ],
           "description": "Language for the extension UI"
         },
-        "fsd-creator.initFolders": {
+        "fsd-explorer.initFolders": {
           "type": "object",
           "default": {
             "entities": true,
@@ -172,7 +170,7 @@
           },
           "description": "Folders to create during FSD initialization"
         },
-        "fsd-creator.domainLayers": {
+        "fsd-explorer.domainLayers": {
           "type": "object",
           "default": {
             "entities": true,
@@ -182,7 +180,7 @@
           },
           "description": "Layers available for slice creation"
         },
-        "fsd-creator.layerStructure": {
+        "fsd-explorer.layerStructure": {
           "type": "object",
           "default": {
             "entities": {

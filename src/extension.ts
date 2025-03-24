@@ -15,26 +15,26 @@ const messages = {
     refreshExplorer: "workbench.files.action.refreshFilesExplorer",
 
     // FSD 초기화 관련
-    noSrcFolder: "FSD Creator: src folder not found. Create it?",
+    noSrcFolder: "FSD Explorer: src folder not found. Create it?",
     createSrcOptions: ["Yes", "No"],
-    initCancelled: "FSD Creator: Initialization cancelled.",
-    foldersCreated: "FSD Creator: The following folders have been created: ",
-    foldersExist: "FSD Creator: The following folders already exist: ",
+    initCancelled: "FSD Explorer: Initialization cancelled.",
+    foldersCreated: "FSD Explorer: The following folders have been created: ",
+    foldersExist: "FSD Explorer: The following folders already exist: ",
 
     // 슬라이스 생성 관련
     initFirst:
-      "FSD Creator: src folder not found. Please initialize FSD structure first.",
+      "FSD Explorer: src folder not found. Please initialize FSD structure first.",
     domainNamePlaceholder: "Enter slice name (e.g., User, Auth, Product)",
     domainNamePrompt: "Enter the name of the slice to create",
     domainNameRequired: "Slice name is required.",
     domainNameInvalid:
       "Slice name must start with a letter and contain only letters, numbers, and hyphens.",
-    domainCreationCancelled: "FSD Creator: Slice creation cancelled.",
+    domainCreationCancelled: "FSD Explorer: Slice creation cancelled.",
     selectLayersPlaceholder: "Select layers to create the slice in",
-    layerSelectionCancelled: "FSD Creator: Layer selection cancelled.",
-    domainsCreated: "FSD Creator: The following slices have been created: ",
-    domainsExist: "FSD Creator: The following slices already exist: ",
-    domainsError: "FSD Creator: Error creating the following slices: ",
+    layerSelectionCancelled: "FSD Explorer: Layer selection cancelled.",
+    domainsCreated: "FSD Explorer: The following slices have been created: ",
+    domainsExist: "FSD Explorer: The following slices already exist: ",
+    domainsError: "FSD Explorer: Error creating the following slices: ",
 
     // 파일 내용 관련
     domainEntryPoint: "Entry point for the slice",
@@ -44,7 +44,7 @@ const messages = {
     addComponentContent: "Add component content here",
 
     // 설정 UI 관련
-    settingsTitle: "FSD Creator Settings",
+    settingsTitle: "FSD Explorer Settings",
     generalSettings: "General Settings",
     language: "Language",
     fsdInitialization: "FSD Initialization",
@@ -55,7 +55,7 @@ const messages = {
     createComponent: "create component",
     saveSettings: "Save Settings",
     resetToDefaults: "Reset to Defaults",
-    settingsSaved: "FSD Creator settings saved!",
+    settingsSaved: "FSD Explorer settings saved!",
 
     // 사이드바 관련
     initializeFsd: "Initialize FSD Architecture structure in your project.",
@@ -126,27 +126,27 @@ const messages = {
     refreshExplorer: "workbench.files.action.refreshFilesExplorer",
 
     // FSD 초기화 관련
-    noSrcFolder: "FSD Creator: src 폴더가 없습니다. 생성할까요?",
+    noSrcFolder: "FSD Explorer: src 폴더가 없습니다. 생성할까요?",
     createSrcOptions: ["예", "아니오"],
-    initCancelled: "FSD Creator: 초기화가 취소되었습니다.",
-    foldersCreated: "FSD Creator: 다음 폴더가 생성되었습니다: ",
-    foldersExist: "FSD Creator: 다음 폴더는 이미 존재합니다: ",
+    initCancelled: "FSD Explorer: 초기화가 취소되었습니다.",
+    foldersCreated: "FSD Explorer: 다음 폴더가 생성되었습니다: ",
+    foldersExist: "FSD Explorer: 다음 폴더는 이미 존재합니다: ",
 
     // 슬라이스 생성 관련
     initFirst:
-      "FSD Creator: src 폴더가 없습니다. 먼저 FSD 구조를 초기화해주세요.",
+      "FSD Explorer: src 폴더가 없습니다. 먼저 FSD 구조를 초기화해주세요.",
     domainNamePlaceholder:
       "슬라이스 이름을 입력하세요 (예: User, Auth, Product)",
     domainNamePrompt: "생성할 슬라이스의 이름을 입력하세요",
     domainNameRequired: "슬라이스 이름은 필수입니다.",
     domainNameInvalid:
       "슬라이스 이름은 알파벳으로 시작하고, 알파벳, 숫자, 하이픈만 포함해야 합니다.",
-    domainCreationCancelled: "FSD Creator: 슬라이스 생성이 취소되었습니다.",
+    domainCreationCancelled: "FSD Explorer: 슬라이스 생성이 취소되었습니다.",
     selectLayersPlaceholder: "슬라이스를 생성할 레이어를 선택하세요",
-    layerSelectionCancelled: "FSD Creator: 레이어 선택이 취소되었습니다.",
-    domainsCreated: "FSD Creator: 다음 슬라이스가 생성되었습니다: ",
-    domainsExist: "FSD Creator: 다음 슬라이스는 이미 존재합니다: ",
-    domainsError: "FSD Creator: 다음 슬라이스 생성 중 오류가 발생했습니다: ",
+    layerSelectionCancelled: "FSD Explorer: 레이어 선택이 취소되었습니다.",
+    domainsCreated: "FSD Explorer: 다음 슬라이스가 생성되었습니다: ",
+    domainsExist: "FSD Explorer: 다음 슬라이스는 이미 존재합니다: ",
+    domainsError: "FSD Explorer: 다음 슬라이스 생성 중 오류가 발생했습니다: ",
 
     // 파일 내용 관련
     domainEntryPoint: "슬라이스의 진입점",
@@ -156,7 +156,7 @@ const messages = {
     addComponentContent: "여기에 컴포넌트 내용을 추가하세요",
 
     // 설정 UI 관련
-    settingsTitle: "FSD Creator 설정",
+    settingsTitle: "FSD Explorer 설정",
     generalSettings: "일반 설정",
     language: "언어",
     fsdInitialization: "FSD 초기화",
@@ -167,7 +167,7 @@ const messages = {
     createComponent: "컴포넌트 생성",
     saveSettings: "설정 저장",
     resetToDefaults: "기본값으로 재설정",
-    settingsSaved: "FSD Creator 설정이 저장되었습니다!",
+    settingsSaved: "FSD Explorer 설정이 저장되었습니다!",
 
     // 사이드바 관련
     initializeFsd: "프로젝트에 FSD 아키텍처 구조를 초기화합니다.",
@@ -233,7 +233,7 @@ const messages = {
 
 // 현재 언어 설정 가져오기
 function getCurrentLanguage(): "en" | "ko" {
-  const config = vscode.workspace.getConfiguration("fsd-creator")
+  const config = vscode.workspace.getConfiguration("fsd-explorer")
   const language = config.get<string>("language") || "en"
   return language === "ko" ? "ko" : "en"
 }
@@ -334,7 +334,7 @@ async function initializeFsdStructure(): Promise<void> {
   }
 
   // 설정에서 초기화할 폴더 가져오기
-  const config = vscode.workspace.getConfiguration("fsd-creator")
+  const config = vscode.workspace.getConfiguration("fsd-explorer")
   const initFolders = config.get<Record<string, boolean>>("initFolders") || {
     entities: true,
     features: true,
@@ -378,7 +378,7 @@ async function initializeFsdStructure(): Promise<void> {
   }
 
   // FSD Explorer 새로고침
-  vscode.commands.executeCommand("fsd-creator.refreshExplorer")
+  vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
 }
 
 // 슬라이스 생성 함수
@@ -420,7 +420,7 @@ async function createSlice(): Promise<void> {
   }
 
   // 설정에서 슬라이스 생성 가능한 레이어 가져오기
-  const config = vscode.workspace.getConfiguration("fsd-creator")
+  const config = vscode.workspace.getConfiguration("fsd-explorer")
   const availableLayers = config.get<Record<string, boolean>>(
     "domainLayers"
   ) || {
@@ -617,7 +617,7 @@ async function createSlice(): Promise<void> {
   }
 
   // FSD Explorer 새로고침
-  vscode.commands.executeCommand("fsd-creator.refreshExplorer")
+  vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
 }
 
 // HTML 템플릿 로드 및 변수 대체 함수
@@ -693,7 +693,7 @@ async function getSettingsWebviewContent(
   )
 
   // 현재 설정 가져오기
-  const config = vscode.workspace.getConfiguration("fsd-creator")
+  const config = vscode.workspace.getConfiguration("fsd-explorer")
 
   // 언어 설정 가져오기
   const language = config.get<string>("language") || "en"
@@ -904,7 +904,7 @@ async function createSettingsWebview(context: vscode.ExtensionContext) {
   // 웹뷰 패널 생성
   const panel = vscode.window.createWebviewPanel(
     "fsdSettings", // 고유 ID
-    "FSD Creator Settings", // 패널 제목
+    "FSD Explorer Settings", // 패널 제목
     vscode.ViewColumn.One, // 표시할 열
     {
       enableScripts: true, // 스크립트 활성화
@@ -922,7 +922,7 @@ async function createSettingsWebview(context: vscode.ExtensionContext) {
       switch (message.command) {
         case "saveSettings":
           // 설정 저장
-          const config = vscode.workspace.getConfiguration("fsd-creator")
+          const config = vscode.workspace.getConfiguration("fsd-explorer")
           await config.update(
             "language",
             message.settings.language,
@@ -1025,7 +1025,7 @@ async function createFile(fileItem: FSDItem) {
     await vscode.window.showTextDocument(document)
 
     // FSD Explorer 새로고침
-    vscode.commands.executeCommand("fsd-creator.refreshExplorer")
+    vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
   } catch (error) {
     vscode.window.showErrorMessage(
       `${getMessage("errorCreatingFile")}: ${error}`
@@ -1090,7 +1090,7 @@ async function createFolder(fileItem: FSDItem) {
     fs.mkdirSync(folderPath)
 
     // FSD Explorer 새로고침
-    vscode.commands.executeCommand("fsd-creator.refreshExplorer")
+    vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
   } catch (error) {
     vscode.window.showErrorMessage(
       `${getMessage("errorCreatingFolder")}: ${error}`
@@ -1143,7 +1143,7 @@ async function rename(fileItem: FSDItem) {
     fs.renameSync(oldPath, newPath)
 
     // FSD Explorer 새로고침
-    vscode.commands.executeCommand("fsd-creator.refreshExplorer")
+    vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
   } catch (error) {
     vscode.window.showErrorMessage(`${getMessage("errorRenaming")}: ${error}`)
   }
@@ -1185,7 +1185,7 @@ async function deleteItem(fileItem: FSDItem) {
     }
 
     // FSD Explorer 새로고침
-    vscode.commands.executeCommand("fsd-creator.refreshExplorer")
+    vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
   } catch (error) {
     vscode.window.showErrorMessage(`${getMessage("errorDeleting")}: ${error}`)
   }
@@ -1193,7 +1193,7 @@ async function deleteItem(fileItem: FSDItem) {
 
 // 파일 열기 명령어 등록
 const openFileDisposable = vscode.commands.registerCommand(
-  "fsd-creator.openFile",
+  "fsd-explorer.openFile",
   async (item: FSDItem) => {
     if (
       item.resourceUri &&
@@ -1217,7 +1217,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 기본 명령어 등록
   const helloWorldDisposable = vscode.commands.registerCommand(
-    "fsd-creator.helloWorld",
+    "fsd-explorer.helloWorld",
     () => {
       vscode.window.showInformationMessage(getMessage("extensionActive"))
     }
@@ -1225,19 +1225,19 @@ export function activate(context: vscode.ExtensionContext) {
 
   // FSD 구조 초기화 명령어 등록
   const initFsdDisposable = vscode.commands.registerCommand(
-    "fsd-creator.initializeFsd",
+    "fsd-explorer.initializeFsd",
     initializeFsdStructure
   )
 
   // 슬라이스 생성 명령어 등록
   const createSliceDisposable = vscode.commands.registerCommand(
-    "fsd-creator.createDomain",
+    "fsd-explorer.createDomain",
     createSlice
   )
 
   // 설정 명령어 등록
   const openSettingsDisposable = vscode.commands.registerCommand(
-    "fsd-creator.openSettings",
+    "fsd-explorer.openSettings",
     async () => {
       await createSettingsWebview(context)
     }
@@ -1261,34 +1261,34 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 리프레시 명령어 등록
   const refreshExplorerDisposable = vscode.commands.registerCommand(
-    "fsd-creator.refreshExplorer",
+    "fsd-explorer.refreshExplorer",
     () => fsdExplorerInstance.refresh()
   )
 
   // 파일 시스템 명령어 등록
   const createFileDisposable = vscode.commands.registerCommand(
-    "fsd-creator.createFile",
+    "fsd-explorer.createFile",
     createFile
   )
 
   const createFolderDisposable = vscode.commands.registerCommand(
-    "fsd-creator.createFolder",
+    "fsd-explorer.createFolder",
     createFolder
   )
 
   const renameDisposable = vscode.commands.registerCommand(
-    "fsd-creator.rename",
+    "fsd-explorer.rename",
     rename
   )
 
   const deleteDisposable = vscode.commands.registerCommand(
-    "fsd-creator.delete",
+    "fsd-explorer.delete",
     deleteItem
   )
 
   // FSD 규칙 위반 파일 수정 명령어 등록
   const fixFsdViolationDisposable = vscode.commands.registerCommand(
-    "fsd-creator.fixViolation",
+    "fsd-explorer.fixViolation",
     async (item: FSDItem) => {
       if (item.violatesRules) {
         // 파일 열기 (미리보기 모드가 아닌 완전히 열기)
@@ -1307,7 +1307,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 규칙 위반 표시 명령어
   const showViolationsDisposable = vscode.commands.registerCommand(
-    "fsd-creator.showViolations",
+    "fsd-explorer.showViolations",
     async (item?: FSDItem) => {
       // 프로그레스 바를 사용하여 작업 진행 상황 표시
       await vscode.window.withProgress(
