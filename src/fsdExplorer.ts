@@ -270,6 +270,32 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
     try {
       const content = fs.readFileSync(filePath, "utf-8")
 
+      // 파일 내용을 줄 단위로 분리
+      const lines = content.split("\n")
+
+      // 주석이 아닌 라인만 포함하는 필터링된 내용 생성
+      let filteredContent = ""
+      let inMultilineComment = false
+
+      for (const line of lines) {
+        const trimmedLine = line.trim()
+
+        // 다중 라인 주석 시작
+        if (trimmedLine.includes("/*")) {
+          inMultilineComment = true
+        }
+
+        // 주석이 아닌 경우에만 내용 추가
+        if (!inMultilineComment && !trimmedLine.startsWith("//")) {
+          filteredContent += line + "\n"
+        }
+
+        // 다중 라인 주석 종료
+        if (trimmedLine.includes("*/")) {
+          inMultilineComment = false
+        }
+      }
+
       // import 문 찾기 (더 정확한 정규식 사용)
       const importRegex =
         /import\s+(?:(?:\{[^}]*\})|(?:[^{}\s]+))\s+from\s+['"]([^'"]+)['"]/g
@@ -278,8 +304,8 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
 
       let match
 
-      // 상대 경로 import 검사
-      while ((match = importRegex.exec(content)) !== null) {
+      // 상대 경로 import 검사 (필터링된 내용에서만)
+      while ((match = importRegex.exec(filteredContent)) !== null) {
         const importPath = match[1]
 
         // 상대 경로 import만 검사
@@ -320,8 +346,8 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
         }
       }
 
-      // 별칭(@/) import 검사
-      while ((match = aliasImportRegex.exec(content)) !== null) {
+      // 별칭 import 검사 (필터링된 내용에서만)
+      while ((match = aliasImportRegex.exec(filteredContent)) !== null) {
         const importPath = match[1]
         const importParts = importPath.split("/")
 
