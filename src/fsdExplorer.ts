@@ -256,6 +256,11 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
     // 현재 파일의 계층 확인
     const currentLayer = parts[0]
 
+    // app 레이어는 모든 import가 허용됨 (제한 없음)
+    if (currentLayer === "app") {
+      return false
+    }
+
     // 계층 우선순위 정의 (낮을수록 상위 계층)
     const layerPriority: Record<string, number> = {
       app: 0,
@@ -266,49 +271,86 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
       shared: 5,
     }
 
+    // 계층별 별칭 매핑 (별칭 -> 계층 이름)
+    const aliasToLayer: Record<string, string> = {
+      "@app": "app",
+      "@pages": "pages",
+      "@page": "pages",
+      "@widgets": "widgets",
+      "@widget": "widgets",
+      "@features": "features",
+      "@feature": "features",
+      "@entities": "entities",
+      "@entity": "entities",
+      "@shared": "shared",
+      "@": "", // 루트 별칭은 특별 처리
+    }
+
     // 파일 내용 읽기
     try {
       const content = fs.readFileSync(filePath, "utf-8")
 
-      // 파일 내용을 줄 단위로 분리
+      // 주석 제외 처리
+      let processedContent = ""
+      let inMultilineComment = false
       const lines = content.split("\n")
 
-      // 주석이 아닌 라인만 포함하는 필터링된 내용 생성
-      let filteredContent = ""
-      let inMultilineComment = false
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim()
 
-      for (const line of lines) {
-        const trimmedLine = line.trim()
+        // 한 줄 주석은 건너뛰기
+        if (line.startsWith("//")) {
+          continue
+        }
 
-        // 다중 라인 주석 시작
-        if (trimmedLine.includes("/*")) {
+        // 여러 줄 주석 시작
+        if (line.includes("/*") && !line.includes("*/")) {
           inMultilineComment = true
+          continue
         }
 
-        // 주석이 아닌 경우에만 내용 추가
-        if (!inMultilineComment && !trimmedLine.startsWith("//")) {
-          filteredContent += line + "\n"
-        }
-
-        // 다중 라인 주석 종료
-        if (trimmedLine.includes("*/")) {
+        // 여러 줄 주석 종료
+        if (inMultilineComment && line.includes("*/")) {
           inMultilineComment = false
+          continue
+        }
+
+        // 주석 중이 아닌 경우에만 추가
+        if (!inMultilineComment) {
+          processedContent += line + "\n"
         }
       }
 
-      // import 문 찾기 (더 정확한 정규식 사용)
+      // import 문 찾기 (모든 import 처리)
       const importRegex =
         /import\s+(?:(?:\{[^}]*\})|(?:[^{}\s]+))\s+from\s+['"]([^'"]+)['"]/g
-      const aliasImportRegex =
-        /import\s+(?:(?:\{[^}]*\})|(?:[^{}\s]+))\s+from\s+['"]@\/([^'"]+)['"]/g
 
       let match
-
-      // 상대 경로 import 검사 (필터링된 내용에서만)
-      while ((match = importRegex.exec(filteredContent)) !== null) {
+      // 모든 import 문 검사
+      while ((match = importRegex.exec(processedContent)) !== null) {
         const importPath = match[1]
 
-        // 상대 경로 import만 검사
+        // 딱 FSD 관련 별칭만 처리 - 명시적인 필터링
+        const fsdAliases = [
+          "@app/",
+          "@pages/",
+          "@page/",
+          "@widgets/",
+          "@widget/",
+          "@features/",
+          "@feature/",
+          "@entities/",
+          "@entity/",
+          "@shared/",
+          "@/app/",
+          "@/pages/",
+          "@/widgets/",
+          "@/features/",
+          "@/entities/",
+          "@/shared/",
+        ]
+
+        // 상대 경로 또는 FSD 별칭인 경우만 처리
         if (importPath.startsWith(".")) {
           // 절대 경로로 변환
           const importAbsolutePath = path.resolve(
@@ -321,11 +363,23 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
           if (importParts.length > 0) {
             const importLayer = importParts[0]
 
+            // shared 레이어 특수 규칙: shared는 오직 shared 내부만 import 가능
+            if (currentLayer === "shared") {
+              if (importLayer !== "shared") {
+                console.log(
+                  `shared 레이어 규칙 위반: ${filePath} -> ${importPath}`
+                )
+                return true
+              }
+              // shared 내에서는 모든 import 허용
+              continue
+            }
+
             // 계층이 FSD 구조에 포함되는지 확인
             if (importLayer in layerPriority && currentLayer in layerPriority) {
               // 규칙 위반 검사: 하위 계층이 상위 계층을 import하는 경우
               if (layerPriority[currentLayer] > layerPriority[importLayer]) {
-                console.log(`규칙 위반 발견: ${filePath} -> ${importPath}`)
+                console.log(`계층 규칙 위반: ${filePath} -> ${importPath}`)
                 return true
               }
 
@@ -343,36 +397,92 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
               }
             }
           }
-        }
-      }
+        } else {
+          // FSD 별칭인지 확인
+          let isFsdAlias = false
+          for (const alias of fsdAliases) {
+            if (importPath.startsWith(alias)) {
+              isFsdAlias = true
+              break
+            }
+          }
 
-      // 별칭 import 검사 (필터링된 내용에서만)
-      while ((match = aliasImportRegex.exec(filteredContent)) !== null) {
-        const importPath = match[1]
-        const importParts = importPath.split("/")
+          // FSD 별칭이 아니면 건너뛰기
+          if (!isFsdAlias) {
+            continue
+          }
 
-        if (importParts.length > 0) {
-          const importLayer = importParts[0]
+          // FSD 별칭 처리 - 기존 코드 유지
+          // 여러 별칭 패턴 처리
+          let aliasPrefix = null
+          let importPathWithoutAlias = importPath
+          let importLayer = null
+          let sliceName = null
 
-          // 계층이 FSD 구조에 포함되는지 확인
-          if (importLayer in layerPriority && currentLayer in layerPriority) {
-            // 규칙 위반 검사: 하위 계층이 상위 계층을 import하는 경우
-            if (layerPriority[currentLayer] > layerPriority[importLayer]) {
-              console.log(`별칭 규칙 위반 발견: ${filePath} -> @/${importPath}`)
-              return true
+          // 1. 알려진 별칭 패턴 확인 (@feature, @widget 등)
+          for (const alias in aliasToLayer) {
+            if (importPath.startsWith(alias)) {
+              aliasPrefix = alias
+              importPathWithoutAlias = importPath.substring(alias.length)
+
+              // 별칭이 직접 계층을 가리키는 경우 (@features, @widgets 등)
+              if (aliasToLayer[alias]) {
+                importLayer = aliasToLayer[alias]
+                // 슬라이스 이름 추출 (경로에서 첫 번째 부분)
+                const pathParts = importPathWithoutAlias.split("/")
+                if (pathParts.length > 1 && pathParts[0]) {
+                  sliceName = pathParts[0]
+                }
+              }
+              // 루트 별칭인 경우 (@/)
+              else if (alias === "@") {
+                // 경로에서 계층과 슬라이스 추출
+                const pathParts = importPathWithoutAlias.split("/")
+                if (pathParts.length > 0 && pathParts[0]) {
+                  importLayer = pathParts[0]
+                  if (pathParts.length > 1 && pathParts[1]) {
+                    sliceName = pathParts[1]
+                  }
+                }
+              }
+              break
+            }
+          }
+
+          // 별칭을 찾았고 import 계층이 결정된 경우
+          if (aliasPrefix && importLayer) {
+            // shared 레이어 특수 규칙: shared는 오직 shared 내부만 import 가능
+            if (currentLayer === "shared") {
+              if (importLayer !== "shared") {
+                console.log(
+                  `shared 레이어 별칭 규칙 위반: ${filePath} -> ${importPath}`
+                )
+                return true
+              }
+              // shared 내에서는 모든 import 허용
+              continue
             }
 
-            // 동일 계층 내 다른 슬라이스 import 검사
-            if (
-              layerPriority[currentLayer] === layerPriority[importLayer] &&
-              importParts.length > 1 &&
-              parts.length > 1 &&
-              importParts[1] !== parts[1]
-            ) {
-              console.log(
-                `별칭 동일 계층 내 다른 슬라이스 import 위반: ${filePath} -> @/${importPath}`
-              )
-              return true
+            // 계층이 FSD 구조에 포함되는지 확인
+            if (importLayer in layerPriority && currentLayer in layerPriority) {
+              // 규칙 위반 검사: 하위 계층이 상위 계층을 import하는 경우
+              if (layerPriority[currentLayer] > layerPriority[importLayer]) {
+                console.log(`별칭 계층 규칙 위반: ${filePath} -> ${importPath}`)
+                return true
+              }
+
+              // 동일 계층 내 다른 슬라이스 import 검사
+              if (
+                layerPriority[currentLayer] === layerPriority[importLayer] &&
+                sliceName &&
+                parts.length > 1 &&
+                sliceName !== parts[1]
+              ) {
+                console.log(
+                  `별칭 동일 계층 내 다른 슬라이스 import 위반: ${filePath} -> ${importPath}`
+                )
+                return true
+              }
             }
           }
         }
