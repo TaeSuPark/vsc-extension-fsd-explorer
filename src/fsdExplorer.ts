@@ -762,6 +762,14 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
       console.error(`디렉토리 처리 중 오류 (${dirPath}):`, error)
     }
 
+    // 모든 처리가 끝난 후 최종 상태 업데이트
+    if (progress) {
+      progress.report({
+        increment: 0, // 이미 100%에 가까워서 더 이상 increment는 불필요
+        message: `검사 완료: ${processedFiles}개 파일 검사, ${violations.length}개 위반 발견`,
+      })
+    }
+
     return processedFiles
   }
 }

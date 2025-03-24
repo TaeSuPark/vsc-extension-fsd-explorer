@@ -1276,6 +1276,15 @@ export function activate(context: vscode.ExtensionContext) {
               return
             }
 
+            // 검사 완료 메시지 표시
+            progress.report({
+              increment: 100,
+              message: "검사 완료!",
+            })
+
+            // 잠시 대기하여 사용자가 완료 메시지를 볼 수 있게 함
+            await new Promise((resolve) => setTimeout(resolve, 500))
+
             if (violations.length === 0) {
               vscode.window.showInformationMessage("FSD 규칙 위반이 없습니다.")
               return
