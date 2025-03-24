@@ -31,12 +31,16 @@
           api: document.getElementById("entities-api").checked,
           ui: document.getElementById("entities-ui").checked,
           lib: document.getElementById("entities-lib").checked,
+          config: document.getElementById("entities-config").checked,
+          consts: document.getElementById("entities-consts").checked,
         },
         features: {
           model: document.getElementById("features-model").checked,
           api: document.getElementById("features-api").checked,
           ui: document.getElementById("features-ui").checked,
           lib: document.getElementById("features-lib").checked,
+          config: document.getElementById("features-config").checked,
+          consts: document.getElementById("features-consts").checked,
         },
         pages: {
           model: document.getElementById("pages-model").checked,
@@ -44,12 +48,16 @@
           ui: document.getElementById("pages-ui").checked,
           lib: document.getElementById("pages-lib").checked,
           createComponent: document.getElementById("pages-component").checked,
+          config: document.getElementById("pages-config").checked,
+          consts: document.getElementById("pages-consts").checked,
         },
         widgets: {
           model: document.getElementById("widgets-model").checked,
           api: document.getElementById("widgets-api").checked,
           ui: document.getElementById("widgets-ui").checked,
           lib: document.getElementById("widgets-lib").checked,
+          config: document.getElementById("widgets-config").checked,
+          consts: document.getElementById("widgets-consts").checked,
         },
       },
     }
@@ -84,22 +92,30 @@
     document.getElementById("entities-api").checked = true
     document.getElementById("entities-ui").checked = false
     document.getElementById("entities-lib").checked = false
+    document.getElementById("entities-config").checked = false
+    document.getElementById("entities-consts").checked = false
 
     document.getElementById("features-model").checked = true
     document.getElementById("features-api").checked = true
     document.getElementById("features-ui").checked = true
     document.getElementById("features-lib").checked = false
+    document.getElementById("features-config").checked = false
+    document.getElementById("features-consts").checked = false
 
     document.getElementById("pages-model").checked = true
     document.getElementById("pages-api").checked = false
     document.getElementById("pages-ui").checked = true
     document.getElementById("pages-lib").checked = false
     document.getElementById("pages-component").checked = true
+    document.getElementById("pages-config").checked = false
+    document.getElementById("pages-consts").checked = false
 
     document.getElementById("widgets-model").checked = true
     document.getElementById("widgets-api").checked = false
     document.getElementById("widgets-ui").checked = true
     document.getElementById("widgets-lib").checked = false
+    document.getElementById("widgets-config").checked = false
+    document.getElementById("widgets-consts").checked = false
   }
 
   // 이벤트 리스너 등록

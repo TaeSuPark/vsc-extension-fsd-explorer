@@ -1,71 +1,105 @@
-# fsd-creator README
+# FSD Explorer
 
-This is the README for your extension "fsd-creator". After writing up a brief description, we recommend including the following sections.
+## Guide
 
-## Features
+### Introduction
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+FSD Explorer is a VS Code extension for projects using Feature-Sliced Design architecture. This extension helps you visualize your project's FSD structure and enforce architectural rules through real-time violation detection.
 
-For example if there is an image subfolder under your extension project workspace:
+### Features
 
-\!\[feature X\]\(images/feature-x.png\)
+- **FSD Structure Visualization**
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+  - Tree view display of FSD layers (app, pages, widgets, features, entities, shared)
+  - Visual indicators for rule violations (warning icons)
+  - Parent folder violation status propagation
 
-## Requirements
+- **Rule Violation Detection**
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+  - Detects imports from higher layers to lower layers
+  - Detects cross-slice imports within the same layer
+  - Excludes commented-out imports from violation checks
+  - Real-time progress tracking during scans
+  - Cancellable scan operations
 
-## Extension Settings
+- **Project Management**
+  - Initialize FSD structure with customizable layers
+  - Create new slices across multiple layers
+  - Quick file and folder creation within the FSD structure
+  - Rename and delete operations with safety checks
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+### Installation
 
-For example:
+Search for "FSD Explorer" in VS Code Marketplace
 
-This extension contributes the following settings:
+### Usage
 
-- `myExtension.enable`: Enable/disable this extension.
-- `myExtension.thing`: Set to `blah` to do something.
+1. Open a project in VS Code
+2. Click the FSD Explorer icon in the Activity Bar
+3. Initialize FSD structure or open existing one
+4. Use the tree view to navigate your FSD structure
+5. Run violation checks through the command palette or context menu
+6. Click on violation warnings to view and fix issues
 
-## Known Issues
+### Requirements
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+- VS Code version 1.91.0 or higher
+- Project must have a root or src folder for FSD structure
 
-## Release Notes
+### Notes
 
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+- Commented imports are excluded from rule violation checks
+- For absolute path imports, only two alias formats are supported: '@/[layer]' and '@[layer]' (e.g., '@/pages', '@pages')
 
 ---
 
-## Following extension guidelines
+## 가이드
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+### 소개
 
-- [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+FSD Explorer는 Feature-Sliced Design 아키텍처를 사용하는 프로젝트를 위한 VS Code 확장 프로그램입니다. 이 확장은 프로젝트의 FSD 구조를 시각화하고 실시간 위반 감지를 통해 아키텍처 규칙을 준수하도록 돕습니다.
 
-## Working with Markdown
+### 기능
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+- **FSD 구조 시각화**
 
-- Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-- Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-- Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+  - FSD 계층 트리 뷰 표시 (app, pages, widgets, features, entities, shared)
+  - 규칙 위반 시각적 표시 (경고 아이콘)
+  - 상위 폴더 위반 상태 전파
 
-## For more information
+- **규칙 위반 감지**
 
-- [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-- [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+  - 상위 계층에서 하위 계층으로의 import 감지
+  - 동일 계층 내 다른 슬라이스 간 import 감지
+  - 주석 처리된 import 문은 검사에서 제외
+  - 실시간 검사 진행 상태 표시
+  - 검사 작업 취소 가능
 
-**Enjoy!**
+- **프로젝트 관리**
+  - 사용자 정의 가능한 계층으로 FSD 구조 초기화
+  - 여러 계층에 걸쳐 새로운 슬라이스 생성
+  - FSD 구조 내 빠른 파일 및 폴더 생성
+  - 안전한 이름 변경 및 삭제 작업
+
+### 설치 방법
+
+VS Code 마켓플레이스에서 "FSD Explorer" 검색
+
+### 사용 방법
+
+1. VS Code에서 프로젝트 열기
+2. 활동 바에서 FSD Explorer 아이콘 클릭
+3. FSD 구조 초기화 또는 기존 구조 열기
+4. 트리 뷰로 FSD 구조 탐색
+5. 명령 팔레트나 컨텍스트 메뉴로 위반 검사 실행
+6. 위반 경고를 클릭하여 문제 확인 및 수정
+
+### 요구사항
+
+- VS Code 버전 1.91.0 이상
+- 프로젝트에 FSD 구조를 위한 루트 또는 src 폴더 필요
+
+### 참고사항
+
+- 주석 처리된 import 문은 규칙 위반 검사에서 제외됩니다
+- 절대 경로 import 시 '@/[layer]', '@[layer]' 형식의 별칭만 지원됩니다 (예: '@/pages', '@pages')

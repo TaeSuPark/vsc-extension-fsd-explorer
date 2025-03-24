@@ -3,137 +3,260 @@
 import * as vscode from "vscode"
 import * as fs from "fs"
 import * as path from "path"
+import { FSDExplorer, FSDItem } from "./fsdExplorer"
 
 // 다국어 메시지 정의
 const messages = {
   en: {
     // 일반 메시지
     extensionActive:
-      'Congratulations, your extension "fsd-creator" is now active!',
-    noWorkspace: "FSD Creator: No open workspace found.",
+      'Congratulations, your extension "fsd-explorer" is now active!',
+    noWorkspace: "FSD Explorer: No open workspace found.",
     refreshExplorer: "workbench.files.action.refreshFilesExplorer",
 
     // FSD 초기화 관련
-    noSrcFolder: "FSD Creator: src folder not found. Create it?",
+    noSrcFolder: "FSD Explorer: src folder not found. Create it?",
     createSrcOptions: ["Yes", "No"],
-    initCancelled: "FSD Creator: Initialization cancelled.",
-    foldersCreated: "FSD Creator: The following folders have been created: ",
-    foldersExist: "FSD Creator: The following folders already exist: ",
+    initCancelled: "FSD Explorer: Initialization cancelled.",
+    foldersCreated: "FSD Explorer: The following folders have been created: ",
+    foldersExist: "FSD Explorer: The following folders already exist: ",
 
-    // 도메인 생성 관련
+    // 슬라이스 생성 관련
     initFirst:
-      "FSD Creator: src folder not found. Please initialize FSD structure first.",
-    domainNamePlaceholder: "Enter domain name (e.g., User, Auth, Product)",
-    domainNamePrompt: "Enter the name of the domain to create",
-    domainNameRequired: "Domain name is required.",
+      "FSD Explorer: src folder not found. Please initialize FSD structure first.",
+    domainNamePlaceholder: "Enter slice name (e.g., User, Auth, Product)",
+    domainNamePrompt: "Enter the name of the slice to create",
+    domainNameRequired: "Slice name is required.",
     domainNameInvalid:
-      "Domain name must start with a letter and contain only letters, numbers, and hyphens.",
-    domainCreationCancelled: "FSD Creator: Domain creation cancelled.",
-    selectLayersPlaceholder: "Select layers to create the domain in",
-    layerSelectionCancelled: "FSD Creator: Layer selection cancelled.",
-    domainsCreated: "FSD Creator: The following domains have been created: ",
-    domainsExist: "FSD Creator: The following domains already exist: ",
-    domainsError: "FSD Creator: Error creating the following domains: ",
+      "Slice name must start with a letter and contain only letters, numbers, and hyphens.",
+    domainCreationCancelled: "FSD Explorer: Slice creation cancelled.",
+    selectLayersPlaceholder: "Select layers to create the slice in",
+    layerSelectionCancelled: "FSD Explorer: Layer selection cancelled.",
+    domainsCreated: "FSD Explorer: The following slices have been created: ",
+    domainsExist: "FSD Explorer: The following slices already exist: ",
+    domainsError: "FSD Explorer: Error creating the following slices: ",
 
     // 파일 내용 관련
-    domainEntryPoint: "Entry point for the domain",
-    interfaceDefinition: "Interface definition for the domain",
+    domainEntryPoint: "Entry point for the slice",
+    interfaceDefinition: "Interface definition for the slice",
     addPropsHere: "Add interface properties here",
     componentPage: "page",
     addComponentContent: "Add component content here",
 
     // 설정 UI 관련
-    settingsTitle: "FSD Creator Settings",
+    settingsTitle: "FSD Explorer Settings",
     generalSettings: "General Settings",
     language: "Language",
     fsdInitialization: "FSD Initialization",
     foldersToCreate: "Folders to create when initializing",
-    domainCreation: "Domain Creation",
-    layersAvailable: "Layers available for domain creation",
+    domainCreation: "Slice Creation",
+    layersAvailable: "Layers available for slice creation",
     layerStructure: "Layer Structure",
     createComponent: "create component",
     saveSettings: "Save Settings",
     resetToDefaults: "Reset to Defaults",
-    settingsSaved: "FSD Creator settings saved!",
+    settingsSaved: "FSD Explorer settings saved!",
 
     // 사이드바 관련
     initializeFsd: "Initialize FSD Architecture structure in your project.",
     initializeFsdButton: "Initialize FSD",
-    createDomainDesc: "Create a new domain across selected layers.",
-    createDomainButton: "Create Domain",
+    createDomainDesc: "Create a new slice across selected layers.",
+    createDomainButton: "Create Slice",
     openSettingsButton: "Open Settings",
+
+    // 파일 시스템 명령어
+    noActiveEditor: "No active editor",
+    notAFolder: "Selected item is not a folder",
+    enterFileName: "Enter file name",
+    newFilePrompt: "Enter the name of the new file",
+    fileNameRequired: "File name is required",
+    invalidFileName: "File name cannot contain path separators",
+    fileAlreadyExists: "A file with this name already exists",
+    enterFolderName: "Enter folder name",
+    newFolderPrompt: "Enter the name of the new folder",
+    folderNameRequired: "Folder name is required",
+    invalidFolderName: "Folder name cannot contain path separators",
+    folderAlreadyExists: "A folder with this name already exists",
+    errorCreatingFile: "Error creating file",
+    errorCreatingFolder: "Error creating folder",
+    errorRenaming: "Error renaming item",
+    errorDeleting: "Error deleting item",
+    confirmDeleteFolder:
+      "Are you sure you want to delete the folder '{0}' and all its contents?",
+    confirmDeleteFile: "Are you sure you want to delete the file '{0}'?",
+    delete: "Delete",
+    noItemSelected: "No item selected",
+    enterNewName: "Enter new name",
+    renamePrompt: "Enter the new name",
+    nameRequired: "Name is required",
+    invalidName: "Name cannot contain path separators",
+    itemAlreadyExists: "An item with this name already exists",
+
+    // 규칙 위반 검사 관련 메시지
+    folderContainsViolations: "Contains Rule Violations",
+    folderViolationTooltip:
+      "This folder contains files that violate FSD architecture rules",
+    fileViolation: "FSD Rule Violation",
+    fileViolationTooltip: "This file violates FSD architecture rules",
+    sharedLayerViolation: "Shared layer rule violation: {0} -> {1}",
+    layerViolation: "Layer rule violation: {0} -> {1}",
+    crossSliceViolation:
+      "Cross-slice import violation within same layer: {0} -> {1}",
+    fileProcessingError: "Error processing file ({0}):",
+    directoryProcessingError: "Error processing directory ({0}):",
+    countingFiles: "Counting files...",
+    planningToCheck: "Planning to check {0} files",
+    scanComplete: "Scan complete: Examined {0} files, found {1} violations",
+    checkingFile: "Checking file {0}/{1}... ({2} violations found)",
+    checkingViolations: "Checking FSD Rule Violations...",
+    preparingScan: "Preparing scan...",
+    scanCanceled: "FSD rule violation check was canceled.",
+    scanCompleted: "Scan complete!",
+    noViolationsFound: "No FSD rule violations found.",
+    selectViolationFile: "Select a file with rule violations",
+    violationsTitle: "FSD Rule Violations ({0})",
+    scanError: "Error during scan: {0}",
+    fixViolationInstructions:
+      "FSD Rule Violation: Lower layers cannot import from higher layers. Please modify the file.",
   },
   ko: {
     // 일반 메시지
-    extensionActive: "FSD Creator 익스텐션이 활성화되었습니다!",
-    noWorkspace: "FSD Creator: 열린 워크스페이스가 없습니다.",
+    extensionActive: "FSD Explorer 익스텐션이 활성화되었습니다!",
+    noWorkspace: "FSD Explorer: 열린 워크스페이스가 없습니다.",
     refreshExplorer: "workbench.files.action.refreshFilesExplorer",
 
     // FSD 초기화 관련
-    noSrcFolder: "FSD Creator: src 폴더가 없습니다. 생성할까요?",
+    noSrcFolder: "FSD Explorer: src 폴더가 없습니다. 생성할까요?",
     createSrcOptions: ["예", "아니오"],
-    initCancelled: "FSD Creator: 초기화가 취소되었습니다.",
-    foldersCreated: "FSD Creator: 다음 폴더가 생성되었습니다: ",
-    foldersExist: "FSD Creator: 다음 폴더는 이미 존재합니다: ",
+    initCancelled: "FSD Explorer: 초기화가 취소되었습니다.",
+    foldersCreated: "FSD Explorer: 다음 폴더가 생성되었습니다: ",
+    foldersExist: "FSD Explorer: 다음 폴더는 이미 존재합니다: ",
 
-    // 도메인 생성 관련
+    // 슬라이스 생성 관련
     initFirst:
-      "FSD Creator: src 폴더가 없습니다. 먼저 FSD 구조를 초기화해주세요.",
-    domainNamePlaceholder: "도메인 이름을 입력하세요 (예: User, Auth, Product)",
-    domainNamePrompt: "생성할 도메인의 이름을 입력하세요",
-    domainNameRequired: "도메인 이름은 필수입니다.",
+      "FSD Explorer: src 폴더가 없습니다. 먼저 FSD 구조를 초기화해주세요.",
+    domainNamePlaceholder:
+      "슬라이스 이름을 입력하세요 (예: User, Auth, Product)",
+    domainNamePrompt: "생성할 슬라이스의 이름을 입력하세요",
+    domainNameRequired: "슬라이스 이름은 필수입니다.",
     domainNameInvalid:
-      "도메인 이름은 알파벳으로 시작하고, 알파벳, 숫자, 하이픈만 포함해야 합니다.",
-    domainCreationCancelled: "FSD Creator: 도메인 생성이 취소되었습니다.",
-    selectLayersPlaceholder: "도메인을 생성할 레이어를 선택하세요",
-    layerSelectionCancelled: "FSD Creator: 레이어 선택이 취소되었습니다.",
-    domainsCreated: "FSD Creator: 다음 도메인이 생성되었습니다: ",
-    domainsExist: "FSD Creator: 다음 도메인은 이미 존재합니다: ",
-    domainsError: "FSD Creator: 다음 도메인 생성 중 오류가 발생했습니다: ",
+      "슬라이스 이름은 알파벳으로 시작하고, 알파벳, 숫자, 하이픈만 포함해야 합니다.",
+    domainCreationCancelled: "FSD Explorer: 슬라이스 생성이 취소되었습니다.",
+    selectLayersPlaceholder: "슬라이스를 생성할 레이어를 선택하세요",
+    layerSelectionCancelled: "FSD Explorer: 레이어 선택이 취소되었습니다.",
+    domainsCreated: "FSD Explorer: 다음 슬라이스가 생성되었습니다: ",
+    domainsExist: "FSD Explorer: 다음 슬라이스는 이미 존재합니다: ",
+    domainsError: "FSD Explorer: 다음 슬라이스 생성 중 오류가 발생했습니다: ",
 
     // 파일 내용 관련
-    domainEntryPoint: "도메인의 진입점",
-    interfaceDefinition: "도메인의 인터페이스 정의",
+    domainEntryPoint: "슬라이스의 진입점",
+    interfaceDefinition: "슬라이스의 인터페이스 정의",
     addPropsHere: "여기에 인터페이스 속성을 정의하세요",
     componentPage: "페이지",
     addComponentContent: "여기에 컴포넌트 내용을 추가하세요",
 
     // 설정 UI 관련
-    settingsTitle: "FSD Creator 설정",
+    settingsTitle: "FSD Explorer 설정",
     generalSettings: "일반 설정",
     language: "언어",
     fsdInitialization: "FSD 초기화",
     foldersToCreate: "초기화 시 생성할 폴더",
-    domainCreation: "도메인 생성",
-    layersAvailable: "도메인 생성에 사용할 레이어",
+    domainCreation: "슬라이스 생성",
+    layersAvailable: "슬라이스 생성에 사용할 레이어",
     layerStructure: "레이어 구조",
     createComponent: "컴포넌트 생성",
     saveSettings: "설정 저장",
     resetToDefaults: "기본값으로 재설정",
-    settingsSaved: "FSD Creator 설정이 저장되었습니다!",
+    settingsSaved: "FSD Explorer 설정이 저장되었습니다!",
 
     // 사이드바 관련
     initializeFsd: "프로젝트에 FSD 아키텍처 구조를 초기화합니다.",
     initializeFsdButton: "FSD 초기화",
-    createDomainDesc: "선택한 레이어에 새 도메인을 생성합니다.",
-    createDomainButton: "도메인 생성",
+    createDomainDesc: "선택한 레이어에 새 슬라이스를 생성합니다.",
+    createDomainButton: "슬라이스 생성",
     openSettingsButton: "설정 열기",
+
+    // 파일 시스템 명령어
+    noActiveEditor: "활성화된 편집기가 없습니다",
+    notAFolder: "선택한 항목이 폴더가 아닙니다",
+    enterFileName: "파일 이름 입력",
+    newFilePrompt: "새 파일의 이름을 입력하세요",
+    fileNameRequired: "파일 이름은 필수입니다",
+    invalidFileName: "파일 이름에 경로 구분자를 포함할 수 없습니다",
+    fileAlreadyExists: "이 이름의 파일이 이미 존재합니다",
+    enterFolderName: "폴더 이름 입력",
+    newFolderPrompt: "새 폴더의 이름을 입력하세요",
+    folderNameRequired: "폴더 이름은 필수입니다",
+    invalidFolderName: "폴더 이름에 경로 구분자를 포함할 수 없습니다",
+    folderAlreadyExists: "이 이름의 폴더가 이미 존재합니다",
+    errorCreatingFile: "파일 생성 중 오류 발생",
+    errorCreatingFolder: "폴더 생성 중 오류 발생",
+    errorRenaming: "이름 변경 중 오류 발생",
+    errorDeleting: "항목 삭제 중 오류 발생",
+    confirmDeleteFolder: "폴더 '{0}'과(와) 모든 내용을 삭제하시겠습니까?",
+    confirmDeleteFile: "파일 '{0}'을(를) 삭제하시겠습니까?",
+    delete: "삭제",
+    noItemSelected: "선택된 항목이 없습니다",
+    enterNewName: "새 이름 입력",
+    renamePrompt: "새 이름을 입력하세요",
+    nameRequired: "이름은 필수입니다",
+    invalidName: "이름에 경로 구분자를 포함할 수 없습니다",
+    itemAlreadyExists: "이 이름의 항목이 이미 존재합니다",
+
+    // 규칙 위반 검사 관련 메시지
+    folderContainsViolations: "규칙 위반 포함",
+    folderViolationTooltip:
+      "이 폴더는 FSD 아키텍처 규칙을 위반하는 파일을 포함합니다",
+    fileViolation: "FSD 규칙 위반",
+    fileViolationTooltip: "이 파일은 FSD 아키텍처 규칙을 위반합니다",
+    sharedLayerViolation: "shared 레이어 규칙 위반: {0} -> {1}",
+    layerViolation: "계층 규칙 위반: {0} -> {1}",
+    crossSliceViolation: "동일 계층 내 다른 슬라이스 import 위반: {0} -> {1}",
+    fileProcessingError: "파일 처리 중 오류 ({0}):",
+    directoryProcessingError: "디렉토리 처리 중 오류 ({0}):",
+    countingFiles: "파일 수 계산 중...",
+    planningToCheck: "총 {0}개 파일 검사 예정",
+    scanComplete: "검사 완료: {0}개 파일 검사, {1}개 위반 발견",
+    checkingFile: "{0}/{1} 파일 검사 중... ({2}개 위반 발견)",
+    checkingViolations: "FSD 규칙 위반 검사 중...",
+    preparingScan: "검사 준비 중...",
+    scanCanceled: "FSD 규칙 위반 검사가 취소되었습니다.",
+    scanCompleted: "검사 완료!",
+    noViolationsFound: "FSD 규칙 위반이 없습니다.",
+    selectViolationFile: "규칙 위반 파일 선택",
+    violationsTitle: "FSD 규칙 위반 ({0}개)",
+    scanError: "검사 중 오류 발생: {0}",
+    fixViolationInstructions:
+      "FSD 규칙 위반: 하위 계층은 상위 계층을 import할 수 없습니다. 파일을 수정해주세요.",
   },
 }
 
 // 현재 언어 설정 가져오기
 function getCurrentLanguage(): "en" | "ko" {
-  const config = vscode.workspace.getConfiguration("fsd-creator")
+  const config = vscode.workspace.getConfiguration("fsd-explorer")
   const language = config.get<string>("language") || "en"
   return language === "ko" ? "ko" : "en"
 }
 
-// 메시지 가져오기
-function getMessage<T extends keyof typeof messages.en>(
-  key: T
-): (typeof messages.en)[T] {
+// 메시지 가져오기 함수 (매개변수 대체 지원) - 내보내기도 함께 처리
+export function getMessage<T extends keyof typeof messages.en>(
+  key: T,
+  ...args: string[]
+): string {
   const lang = getCurrentLanguage()
-  return messages[lang][key] as (typeof messages.en)[T]
+  // message 변수가 항상 string 타입이 되도록 확실히 처리
+  const langMessages = messages[lang as keyof typeof messages]
+  const messageValue = langMessages[key] || messages.en[key] || String(key)
+
+  // 확실히 string 타입임을 보장
+  let message = String(messageValue)
+
+  // 매개변수 대체
+  args.forEach((arg, i) => {
+    message = message.replace(`{${i}}`, arg)
+  })
+
+  return message
 }
 
 // FSD 폴더 구조
@@ -146,7 +269,7 @@ const FSD_FOLDERS = [
   "app",
 ]
 
-// 도메인 생성 가능한 레이어
+// 슬라이스 생성 가능한 레이어
 const DOMAIN_LAYERS = FSD_FOLDERS.filter(
   (layer) => layer !== "shared" && layer !== "app"
 )
@@ -211,7 +334,7 @@ async function initializeFsdStructure(): Promise<void> {
   }
 
   // 설정에서 초기화할 폴더 가져오기
-  const config = vscode.workspace.getConfiguration("fsd-creator")
+  const config = vscode.workspace.getConfiguration("fsd-explorer")
   const initFolders = config.get<Record<string, boolean>>("initFolders") || {
     entities: true,
     features: true,
@@ -254,12 +377,12 @@ async function initializeFsdStructure(): Promise<void> {
     )
   }
 
-  // 탐색기 새로고침
-  vscode.commands.executeCommand(getMessage("refreshExplorer"))
+  // FSD Explorer 새로고침
+  vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
 }
 
-// 도메인 생성 함수
-async function createDomain(): Promise<void> {
+// 슬라이스 생성 함수
+async function createSlice(): Promise<void> {
   // 현재 워크스페이스 가져오기
   const workspaceFolders = vscode.workspace.workspaceFolders
   if (!workspaceFolders) {
@@ -276,8 +399,8 @@ async function createDomain(): Promise<void> {
     return
   }
 
-  // 도메인 이름 입력 받기
-  const domainName = await vscode.window.showInputBox({
+  // 슬라이스 이름 입력 받기
+  const sliceName = await vscode.window.showInputBox({
     placeHolder: getMessage("domainNamePlaceholder"),
     prompt: getMessage("domainNamePrompt"),
     validateInput: (value) => {
@@ -291,14 +414,16 @@ async function createDomain(): Promise<void> {
     },
   })
 
-  if (!domainName) {
+  if (!sliceName) {
     vscode.window.showInformationMessage(getMessage("domainCreationCancelled"))
     return
   }
 
-  // 설정에서 도메인 생성 가능한 레이어 가져오기
-  const config = vscode.workspace.getConfiguration("fsd-creator")
-  const domainLayers = config.get<Record<string, boolean>>("domainLayers") || {
+  // 설정에서 슬라이스 생성 가능한 레이어 가져오기
+  const config = vscode.workspace.getConfiguration("fsd-explorer")
+  const availableLayers = config.get<Record<string, boolean>>(
+    "domainLayers"
+  ) || {
     entities: true,
     features: true,
     pages: true,
@@ -306,12 +431,12 @@ async function createDomain(): Promise<void> {
   }
 
   // 선택 가능한 레이어 필터링
-  const availableLayers = Object.entries(domainLayers)
+  const layerOptions = Object.entries(availableLayers)
     .filter(([_, enabled]) => enabled)
     .map(([layer]) => layer)
 
   // 레이어 선택 (다중 선택 가능)
-  const selectedLayers = await vscode.window.showQuickPick(availableLayers, {
+  const selectedLayers = await vscode.window.showQuickPick(layerOptions, {
     placeHolder: getMessage("selectLayersPlaceholder"),
     canPickMany: true,
   })
@@ -323,53 +448,82 @@ async function createDomain(): Promise<void> {
 
   // 레이어 구조 설정 가져오기
   const layerStructure = config.get("layerStructure") || {
-    entities: { model: true, api: true, ui: false },
-    features: { model: true, api: true, ui: true },
-    pages: { model: true, api: false, ui: true, createComponent: true },
-    widgets: { model: true, api: false, ui: true },
+    entities: {
+      model: true,
+      api: true,
+      ui: false,
+      lib: false,
+      config: false,
+      consts: false,
+    },
+    features: {
+      model: true,
+      api: true,
+      ui: true,
+      lib: false,
+      config: false,
+      consts: false,
+    },
+    pages: {
+      model: true,
+      api: false,
+      ui: true,
+      createComponent: true,
+      lib: false,
+      config: false,
+      consts: false,
+    },
+    widgets: {
+      model: true,
+      api: false,
+      ui: true,
+      lib: false,
+      config: false,
+      consts: false,
+    },
   }
 
-  // 도메인 생성
-  const createdDomains: string[] = []
-  const existingDomains: string[] = []
-  const errorDomains: string[] = []
+  // 슬라이스 생성
+  const createdSlices: string[] = []
+  const existingSlices: string[] = []
+  const errorSlices: string[] = []
 
   for (const layer of selectedLayers) {
     try {
-      const domainPath = path.join(srcPath, layer, domainName)
-      const indexFilePath = path.join(domainPath, "index.ts")
+      const slicePath = path.join(srcPath, layer, sliceName)
+      const indexFilePath = path.join(slicePath, "index.ts")
 
-      // 도메인 폴더가 이미 존재하는지 확인
-      if (fs.existsSync(domainPath)) {
-        existingDomains.push(`${layer}/${domainName}`)
+      // 슬라이스 폴더가 이미 존재하는지 확인
+      if (fs.existsSync(slicePath)) {
+        existingSlices.push(`${layer}/${sliceName}`)
         continue
       }
 
-      // 도메인 폴더 생성
-      await createFolderIfNotExists(domainPath)
+      // 슬라이스 폴더 생성
+      await createFolderIfNotExists(slicePath)
 
       // 레이어별 구조 설정 가져오기
       const layerConfig = (layerStructure as any)[layer] || { model: true }
 
       // model 폴더 및 interface.ts 생성
       if (layerConfig.model) {
-        const modelPath = path.join(domainPath, "model")
+        const modelPath = path.join(slicePath, "model")
         await createFolderIfNotExists(modelPath)
 
-        // 도메인 이름과 레이어 이름을 PascalCase로 변환
-        const pascalDomainName = domainName
+        // 슬라이스 이름과 레이어 이름을 PascalCase로 변환
+        const pascalSliceName = sliceName
           .split("-")
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
           .join("")
 
         const pascalLayerName = layer.charAt(0).toUpperCase() + layer.slice(1)
 
-        // 인터페이스 이름 생성 (I{Layer}{Domain} 형식)
-        const interfaceName = `I${pascalLayerName}${pascalDomainName}`
+        // 인터페이스 이름 생성 (I{Layer}{Slice} 형식)
+        const interfaceName = `I${pascalLayerName}${pascalSliceName}`
 
         const interfaceContent = `// ${getMessage(
           "interfaceDefinition"
-        )} ${layer}/${domainName}\n\nexport interface ${interfaceName} {\n  // ${getMessage(
+        )} ${layer}/${sliceName}\n\nexport interface ${interfaceName} {\n  // ${getMessage(
           "addPropsHere"
         )}\n}\n`
 
@@ -381,29 +535,47 @@ async function createDomain(): Promise<void> {
 
       // api 폴더 생성
       if (layerConfig.api) {
-        const apiPath = path.join(domainPath, "api")
+        const apiPath = path.join(slicePath, "api")
         await createFolderIfNotExists(apiPath)
       }
 
       // ui 폴더 생성
       if (layerConfig.ui) {
-        const uiPath = path.join(domainPath, "ui")
+        const uiPath = path.join(slicePath, "ui")
         await createFolderIfNotExists(uiPath)
+      }
+
+      // lib 폴더 생성
+      if (layerConfig.lib) {
+        const libPath = path.join(slicePath, "lib")
+        await createFolderIfNotExists(libPath)
+      }
+
+      // config 폴더 생성
+      if (layerConfig.config) {
+        const configPath = path.join(slicePath, "config")
+        await createFolderIfNotExists(configPath)
+      }
+
+      // consts 폴더 생성
+      if (layerConfig.consts) {
+        const constsPath = path.join(slicePath, "consts")
+        await createFolderIfNotExists(constsPath)
       }
 
       // pages 레이어에서 컴포넌트 생성
       if (layer === "pages" && layerConfig.createComponent) {
         // 컴포넌트 이름 생성 (PascalCase)
-        const componentName = domainName
+        const componentName = sliceName
           .split("-")
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
           .join("")
 
         // 컴포넌트 파일 경로
-        const componentFilePath = path.join(domainPath, `${componentName}.tsx`)
+        const componentFilePath = path.join(slicePath, `${componentName}.tsx`)
 
         // 컴포넌트 기본 내용 생성
-        const componentContent = `import React from 'react';\n\nexport const ${componentName} = () => {\n  return (\n    <>\n      <h1>${componentName} ${getMessage(
+        const componentContent = `\nexport const ${componentName} = () => {\n  return (\n    <>\n      <h1>${componentName} ${getMessage(
           "componentPage"
         )}</h1>\n      {/* ${getMessage(
           "addComponentContent"
@@ -415,37 +587,37 @@ async function createDomain(): Promise<void> {
       // index.ts 파일 생성
       const indexContent = `// ${getMessage(
         "domainEntryPoint"
-      )} ${layer}/${domainName}\n\nexport {};\n`
+      )} ${layer}/${sliceName}\n\nexport {};\n`
       await createFileIfNotExists(indexFilePath, indexContent)
 
-      createdDomains.push(`${layer}/${domainName}`)
+      createdSlices.push(`${layer}/${sliceName}`)
     } catch (error) {
-      errorDomains.push(`${layer}/${domainName}`)
-      console.error(`Error creating domain ${layer}/${domainName}:`, error)
+      errorSlices.push(`${layer}/${sliceName}`)
+      console.error(`Error creating slice ${sliceName} in ${layer}:`, error)
     }
   }
 
   // 결과 메시지 표시
-  if (createdDomains.length > 0) {
+  if (createdSlices.length > 0) {
     vscode.window.showInformationMessage(
-      `${getMessage("domainsCreated")}${createdDomains.join(", ")}`
+      `${getMessage("domainsCreated")}${createdSlices.join(", ")}`
     )
   }
 
-  if (existingDomains.length > 0) {
+  if (existingSlices.length > 0) {
     vscode.window.showInformationMessage(
-      `${getMessage("domainsExist")}${existingDomains.join(", ")}`
+      `${getMessage("domainsExist")}${existingSlices.join(", ")}`
     )
   }
 
-  if (errorDomains.length > 0) {
+  if (errorSlices.length > 0) {
     vscode.window.showErrorMessage(
-      `${getMessage("domainsError")}${errorDomains.join(", ")}`
+      `${getMessage("domainsError")}${errorSlices.join(", ")}`
     )
   }
 
-  // 탐색기 새로고침
-  vscode.commands.executeCommand(getMessage("refreshExplorer"))
+  // FSD Explorer 새로고침
+  vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
 }
 
 // HTML 템플릿 로드 및 변수 대체 함수
@@ -507,7 +679,7 @@ async function loadHtmlTemplate(
   }
 }
 
-// 설정 웹뷰 HTML 콘텐츠 생성 함수 수정
+// 설정 웹뷰 HTML 콘텐츠 생성 함수
 async function getSettingsWebviewContent(
   context: vscode.ExtensionContext,
   webview: vscode.Webview
@@ -521,7 +693,7 @@ async function getSettingsWebviewContent(
   )
 
   // 현재 설정 가져오기
-  const config = vscode.workspace.getConfiguration("fsd-creator")
+  const config = vscode.workspace.getConfiguration("fsd-explorer")
 
   // 언어 설정 가져오기
   const language = config.get<string>("language") || "en"
@@ -529,8 +701,8 @@ async function getSettingsWebviewContent(
   // UI 메시지 가져오기
   const uiMessages = messages[language as keyof typeof messages]
 
-  // 설정 가져오기 (기본값 사용)
-  const initFolders = config.get("initFolders") || {
+  // 기본값 정의
+  const defaultInitFolders = {
     entities: true,
     features: true,
     pages: true,
@@ -539,25 +711,67 @@ async function getSettingsWebviewContent(
     app: true,
   }
 
-  const domainLayers = config.get("domainLayers") || {
+  const defaultDomainLayers = {
     entities: true,
     features: true,
     pages: true,
     widgets: true,
   }
 
-  const layerStructure = config.get("layerStructure") || {
-    entities: { model: true, api: true, ui: false, lib: false },
-    features: { model: true, api: true, ui: true, lib: false },
+  const defaultLayerStructure = {
+    entities: {
+      model: true,
+      api: true,
+      ui: false,
+      lib: false,
+      config: false,
+      consts: false,
+    },
+    features: {
+      model: true,
+      api: true,
+      ui: true,
+      lib: false,
+      config: false,
+      consts: false,
+    },
     pages: {
       model: true,
       api: false,
       ui: true,
       lib: false,
+      config: false,
+      consts: false,
       createComponent: true,
     },
-    widgets: { model: true, api: false, ui: true, lib: false },
+    widgets: {
+      model: true,
+      api: false,
+      ui: true,
+      lib: false,
+      config: false,
+      consts: false,
+    },
   }
+  // 설정 가져오기 (기본값과 병합)
+  // 중요: config.get()이 undefined를 반환할 수 있으므로 기본값을 명시적으로 설정
+
+  const initFolders = config.inspect<Record<string, boolean>>("initFolders")
+    ? config.inspect<Record<string, boolean>>("initFolders")?.globalValue
+    : config.inspect<Record<string, boolean>>("initFolders")?.defaultValue ||
+      (defaultInitFolders as Record<string, boolean>)
+
+  const domainLayers =
+    config.inspect<Record<string, boolean>>("domainLayers")?.globalValue ||
+    config.inspect<Record<string, boolean>>("domainLayers")?.defaultValue ||
+    (defaultDomainLayers as Record<string, boolean>)
+
+  const layerStructure =
+    config.inspect<Record<string, Record<string, boolean>>>("layerStructure")
+      ?.globalValue ||
+    config.inspect<Record<string, Record<string, boolean>>>("layerStructure")
+      ?.defaultValue ||
+    (defaultLayerStructure as Record<string, Record<string, boolean>>)
 
   // 디버깅을 위해 콘솔에 현재 설정값 출력
   console.log("Current settings:", {
@@ -565,34 +779,132 @@ async function getSettingsWebviewContent(
     initFolders,
     domainLayers,
     layerStructure,
+    defaultValues: {
+      initFolders: config.inspect("initFolders")?.defaultValue,
+      domainLayers: config.inspect("domainLayers")?.defaultValue,
+      layerStructure: config.inspect("layerStructure")?.defaultValue,
+    },
   })
 
-  // 템플릿 변수
-  const templateVariables = {
-    styleUri: styleUri.toString(),
-    scriptUri: scriptUri.toString(),
-    language,
-    uiMessages,
-    initFolders,
-    domainLayers,
-    layerStructure,
-  }
+  // 표현식 미리 평가
+  const selectedEn = language === "en" ? "selected" : ""
+  const selectedKo = language === "ko" ? "selected" : ""
 
-  // HTML 템플릿 로드 및 변수 대체
-  return await loadHtmlTemplate(
-    context,
-    webview,
-    "media/settings.html",
-    templateVariables
+  // initFolders 체크 상태
+  const checkedEntities = initFolders?.entities ? "checked" : ""
+  const checkedFeatures = initFolders?.features ? "checked" : ""
+  const checkedPages = initFolders?.pages ? "checked" : ""
+  const checkedWidgets = initFolders?.widgets ? "checked" : ""
+  const checkedShared = initFolders?.shared ? "checked" : ""
+  const checkedApp = initFolders?.app ? "checked" : ""
+
+  // domainLayers 체크 상태
+  const checkedDomainEntities = domainLayers?.entities ? "checked" : ""
+  const checkedDomainFeatures = domainLayers?.features ? "checked" : ""
+  const checkedDomainPages = domainLayers?.pages ? "checked" : ""
+  const checkedDomainWidgets = domainLayers?.widgets ? "checked" : ""
+
+  // layerStructure 체크 상태
+  const checkedEntitiesModel = layerStructure.entities.model ? "checked" : ""
+  const checkedEntitiesApi = layerStructure.entities.api ? "checked" : ""
+  const checkedEntitiesUi = layerStructure.entities.ui ? "checked" : ""
+  const checkedEntitiesLib = layerStructure.entities.lib ? "checked" : ""
+  const checkedEntitiesConfig = layerStructure.entities.config ? "checked" : ""
+  const checkedEntitiesConsts = layerStructure.entities.consts ? "checked" : ""
+
+  const checkedFeaturesModel = layerStructure.features.model ? "checked" : ""
+  const checkedFeaturesApi = layerStructure.features.api ? "checked" : ""
+  const checkedFeaturesUi = layerStructure.features.ui ? "checked" : ""
+  const checkedFeaturesLib = layerStructure.features.lib ? "checked" : ""
+  const checkedFeaturesConfig = layerStructure.features.config ? "checked" : ""
+  const checkedFeaturesConsts = layerStructure.features.consts ? "checked" : ""
+
+  const checkedPagesModel = layerStructure.pages.model ? "checked" : ""
+  const checkedPagesApi = layerStructure.pages.api ? "checked" : ""
+  const checkedPagesUi = layerStructure.pages.ui ? "checked" : ""
+  const checkedPagesLib = layerStructure.pages.lib ? "checked" : ""
+  const checkedPagesConfig = layerStructure.pages.config ? "checked" : ""
+  const checkedPagesConsts = layerStructure.pages.consts ? "checked" : ""
+  const checkedPagesComponent = layerStructure.pages.createComponent
+    ? "checked"
+    : ""
+
+  const checkedWidgetsModel = layerStructure.widgets.model ? "checked" : ""
+  const checkedWidgetsApi = layerStructure.widgets.api ? "checked" : ""
+  const checkedWidgetsUi = layerStructure.widgets.ui ? "checked" : ""
+  const checkedWidgetsLib = layerStructure.widgets.lib ? "checked" : ""
+  const checkedWidgetsConfig = layerStructure.widgets.config ? "checked" : ""
+  const checkedWidgetsConsts = layerStructure.widgets.consts ? "checked" : ""
+
+  // HTML 템플릿 파일 읽기
+  const templatePath = vscode.Uri.joinPath(
+    context.extensionUri,
+    "media",
+    "settings.html"
   )
+  let templateContent = await fs.promises.readFile(templatePath.fsPath, "utf8")
+
+  // 템플릿 변수 대체
+  templateContent = templateContent
+    .replace(/\${styleUri}/g, styleUri.toString())
+    .replace(/\${scriptUri}/g, scriptUri.toString())
+    .replace(/\${language}/g, language)
+    .replace(/\${selectedEn}/g, selectedEn)
+    .replace(/\${selectedKo}/g, selectedKo)
+    .replace(/\${checkedEntities}/g, checkedEntities)
+    .replace(/\${checkedFeatures}/g, checkedFeatures)
+    .replace(/\${checkedPages}/g, checkedPages)
+    .replace(/\${checkedWidgets}/g, checkedWidgets)
+    .replace(/\${checkedShared}/g, checkedShared)
+    .replace(/\${checkedApp}/g, checkedApp)
+    .replace(/\${checkedDomainEntities}/g, checkedDomainEntities)
+    .replace(/\${checkedDomainFeatures}/g, checkedDomainFeatures)
+    .replace(/\${checkedDomainPages}/g, checkedDomainPages)
+    .replace(/\${checkedDomainWidgets}/g, checkedDomainWidgets)
+    .replace(/\${checkedEntitiesModel}/g, checkedEntitiesModel)
+    .replace(/\${checkedEntitiesApi}/g, checkedEntitiesApi)
+    .replace(/\${checkedEntitiesUi}/g, checkedEntitiesUi)
+    .replace(/\${checkedEntitiesLib}/g, checkedEntitiesLib)
+    .replace(/\${checkedEntitiesConfig}/g, checkedEntitiesConfig)
+    .replace(/\${checkedEntitiesConsts}/g, checkedEntitiesConsts)
+    .replace(/\${checkedFeaturesModel}/g, checkedFeaturesModel)
+    .replace(/\${checkedFeaturesApi}/g, checkedFeaturesApi)
+    .replace(/\${checkedFeaturesUi}/g, checkedFeaturesUi)
+    .replace(/\${checkedFeaturesLib}/g, checkedFeaturesLib)
+    .replace(/\${checkedFeaturesConfig}/g, checkedFeaturesConfig)
+    .replace(/\${checkedFeaturesConsts}/g, checkedFeaturesConsts)
+    .replace(/\${checkedPagesModel}/g, checkedPagesModel)
+    .replace(/\${checkedPagesApi}/g, checkedPagesApi)
+    .replace(/\${checkedPagesUi}/g, checkedPagesUi)
+    .replace(/\${checkedPagesLib}/g, checkedPagesLib)
+    .replace(/\${checkedPagesConfig}/g, checkedPagesConfig)
+    .replace(/\${checkedPagesConsts}/g, checkedPagesConsts)
+    .replace(/\${checkedPagesComponent}/g, checkedPagesComponent)
+    .replace(/\${checkedWidgetsModel}/g, checkedWidgetsModel)
+    .replace(/\${checkedWidgetsApi}/g, checkedWidgetsApi)
+    .replace(/\${checkedWidgetsUi}/g, checkedWidgetsUi)
+    .replace(/\${checkedWidgetsLib}/g, checkedWidgetsLib)
+    .replace(/\${checkedWidgetsConfig}/g, checkedWidgetsConfig)
+    .replace(/\${checkedWidgetsConsts}/g, checkedWidgetsConsts)
+  // UI 메시지 대체
+  Object.entries(uiMessages).forEach(([key, value]) => {
+    // value를 문자열로 변환
+    const stringValue = String(value)
+    templateContent = templateContent.replace(
+      new RegExp(`\\$\\{uiMessages\\.${key}\\}`, "g"),
+      stringValue
+    )
+  })
+
+  return templateContent
 }
 
-// 설정 웹뷰 패널 생성 함수 수정
+// 설정 웹뷰 패널 생성 함수
 async function createSettingsWebview(context: vscode.ExtensionContext) {
   // 웹뷰 패널 생성
   const panel = vscode.window.createWebviewPanel(
     "fsdSettings", // 고유 ID
-    "FSD Creator Settings", // 패널 제목
+    "FSD Explorer Settings", // 패널 제목
     vscode.ViewColumn.One, // 표시할 열
     {
       enableScripts: true, // 스크립트 활성화
@@ -610,7 +922,7 @@ async function createSettingsWebview(context: vscode.ExtensionContext) {
       switch (message.command) {
         case "saveSettings":
           // 설정 저장
-          const config = vscode.workspace.getConfiguration("fsd-creator")
+          const config = vscode.workspace.getConfiguration("fsd-explorer")
           await config.update(
             "language",
             message.settings.language,
@@ -652,6 +964,251 @@ async function createSettingsWebview(context: vscode.ExtensionContext) {
   return panel
 }
 
+// 파일 생성 명령어
+async function createFile(fileItem: FSDItem) {
+  if (!fileItem) {
+    const activeEditor = vscode.window.activeTextEditor
+    if (!activeEditor) {
+      vscode.window.showErrorMessage(getMessage("noActiveEditor"))
+      return
+    }
+
+    // 현재 열린 파일의 디렉토리를 기본 위치로 사용
+    const currentFilePath = activeEditor.document.uri.fsPath
+    const currentDir = path.dirname(currentFilePath)
+    fileItem = {
+      resourceUri: vscode.Uri.file(currentDir),
+      contextValue: "folder",
+    } as FSDItem
+  }
+
+  // 폴더인지 확인
+  if (fileItem.contextValue !== "folder") {
+    vscode.window.showErrorMessage(getMessage("notAFolder"))
+    return
+  }
+
+  // 파일 이름 입력 받기
+  const fileName = await vscode.window.showInputBox({
+    placeHolder: getMessage("enterFileName"),
+    prompt: getMessage("newFilePrompt"),
+    validateInput: (value) => {
+      if (!value) {
+        return getMessage("fileNameRequired")
+      }
+      if (value.includes("/") || value.includes("\\")) {
+        return getMessage("invalidFileName")
+      }
+      return null
+    },
+  })
+
+  if (!fileName) {
+    return // 취소됨
+  }
+
+  // 파일 경로 생성
+  const filePath = path.join(fileItem.resourceUri.fsPath, fileName)
+
+  // 파일이 이미 존재하는지 확인
+  if (fs.existsSync(filePath)) {
+    vscode.window.showErrorMessage(getMessage("fileAlreadyExists"))
+    return
+  }
+
+  // 파일 생성
+  try {
+    fs.writeFileSync(filePath, "")
+
+    // 생성된 파일 열기
+    const document = await vscode.workspace.openTextDocument(filePath)
+    await vscode.window.showTextDocument(document)
+
+    // FSD Explorer 새로고침
+    vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
+  } catch (error) {
+    vscode.window.showErrorMessage(
+      `${getMessage("errorCreatingFile")}: ${error}`
+    )
+  }
+}
+
+// 폴더 생성 명령어
+async function createFolder(fileItem: FSDItem) {
+  if (!fileItem) {
+    const activeEditor = vscode.window.activeTextEditor
+    if (!activeEditor) {
+      vscode.window.showErrorMessage(getMessage("noActiveEditor"))
+      return
+    }
+
+    // 현재 열린 파일의 디렉토리를 기본 위치로 사용
+    const currentFilePath = activeEditor.document.uri.fsPath
+    const currentDir = path.dirname(currentFilePath)
+    fileItem = {
+      resourceUri: vscode.Uri.file(currentDir),
+      contextValue: "folder",
+    } as FSDItem
+  }
+
+  // 폴더인지 확인
+  if (fileItem.contextValue !== "folder") {
+    vscode.window.showErrorMessage(getMessage("notAFolder"))
+    return
+  }
+
+  // 폴더 이름 입력 받기
+  const folderName = await vscode.window.showInputBox({
+    placeHolder: getMessage("enterFolderName"),
+    prompt: getMessage("newFolderPrompt"),
+    validateInput: (value) => {
+      if (!value) {
+        return getMessage("folderNameRequired")
+      }
+      if (value.includes("/") || value.includes("\\")) {
+        return getMessage("invalidFolderName")
+      }
+      return null
+    },
+  })
+
+  if (!folderName) {
+    return // 취소됨
+  }
+
+  // 폴더 경로 생성
+  const folderPath = path.join(fileItem.resourceUri.fsPath, folderName)
+
+  // 폴더가 이미 존재하는지 확인
+  if (fs.existsSync(folderPath)) {
+    vscode.window.showErrorMessage(getMessage("folderAlreadyExists"))
+    return
+  }
+
+  // 폴더 생성
+  try {
+    fs.mkdirSync(folderPath)
+
+    // FSD Explorer 새로고침
+    vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
+  } catch (error) {
+    vscode.window.showErrorMessage(
+      `${getMessage("errorCreatingFolder")}: ${error}`
+    )
+  }
+}
+
+// 이름 변경 명령어
+async function rename(fileItem: FSDItem) {
+  if (!fileItem) {
+    vscode.window.showErrorMessage(getMessage("noItemSelected"))
+    return
+  }
+
+  const oldPath = fileItem.resourceUri.fsPath
+  const oldName = path.basename(oldPath)
+  const parentDir = path.dirname(oldPath)
+
+  // 새 이름 입력 받기
+  const newName = await vscode.window.showInputBox({
+    value: oldName,
+    placeHolder: getMessage("enterNewName"),
+    prompt: getMessage("renamePrompt"),
+    validateInput: (value) => {
+      if (!value) {
+        return getMessage("nameRequired")
+      }
+      if (value.includes("/") || value.includes("\\")) {
+        return getMessage("invalidName")
+      }
+      return null
+    },
+  })
+
+  if (!newName || newName === oldName) {
+    return // 취소되거나 이름이 변경되지 않음
+  }
+
+  // 새 경로 생성
+  const newPath = path.join(parentDir, newName)
+
+  // 이미 존재하는지 확인
+  if (fs.existsSync(newPath)) {
+    vscode.window.showErrorMessage(getMessage("itemAlreadyExists"))
+    return
+  }
+
+  // 이름 변경
+  try {
+    fs.renameSync(oldPath, newPath)
+
+    // FSD Explorer 새로고침
+    vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
+  } catch (error) {
+    vscode.window.showErrorMessage(`${getMessage("errorRenaming")}: ${error}`)
+  }
+}
+
+// 삭제 명령어
+async function deleteItem(fileItem: FSDItem) {
+  if (!fileItem) {
+    vscode.window.showErrorMessage(getMessage("noItemSelected"))
+    return
+  }
+
+  const itemPath = fileItem.resourceUri.fsPath
+  const itemName = path.basename(itemPath)
+  const isDirectory = fileItem.contextValue === "folder"
+
+  // 확인 메시지
+  const confirmMessage = isDirectory
+    ? getMessage("confirmDeleteFolder").replace("{0}", itemName)
+    : getMessage("confirmDeleteFile").replace("{0}", itemName)
+
+  const confirmed = await vscode.window.showWarningMessage(
+    confirmMessage,
+    { modal: true },
+    getMessage("delete")
+  )
+
+  if (confirmed !== getMessage("delete")) {
+    return // 취소됨
+  }
+
+  // 삭제
+  try {
+    if (isDirectory) {
+      // 재귀적으로 폴더 삭제
+      fs.rmdirSync(itemPath, { recursive: true })
+    } else {
+      fs.unlinkSync(itemPath)
+    }
+
+    // FSD Explorer 새로고침
+    vscode.commands.executeCommand("fsd-explorer.refreshExplorer")
+  } catch (error) {
+    vscode.window.showErrorMessage(`${getMessage("errorDeleting")}: ${error}`)
+  }
+}
+
+// 파일 열기 명령어 등록
+const openFileDisposable = vscode.commands.registerCommand(
+  "fsd-explorer.openFile",
+  async (item: FSDItem) => {
+    if (
+      item.resourceUri &&
+      (item.contextValue === "file" || item.contextValue === "fsdViolation")
+    ) {
+      // 미리보기 모드가 아닌 완전히 열기 위해 preview: false 옵션 사용
+      const document = await vscode.workspace.openTextDocument(item.resourceUri)
+      await vscode.window.showTextDocument(document, { preview: false })
+    }
+  }
+)
+
+// 전역 변수로 FSD Explorer 인스턴스 선언
+let fsdExplorerInstance: FSDExplorer
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -660,7 +1217,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 기본 명령어 등록
   const helloWorldDisposable = vscode.commands.registerCommand(
-    "fsd-creator.helloWorld",
+    "fsd-explorer.helloWorld",
     () => {
       vscode.window.showInformationMessage(getMessage("extensionActive"))
     }
@@ -668,29 +1225,194 @@ export function activate(context: vscode.ExtensionContext) {
 
   // FSD 구조 초기화 명령어 등록
   const initFsdDisposable = vscode.commands.registerCommand(
-    "fsd-creator.initializeFsd",
+    "fsd-explorer.initializeFsd",
     initializeFsdStructure
   )
 
-  // 도메인 생성 명령어 등록
-  const createDomainDisposable = vscode.commands.registerCommand(
-    "fsd-creator.createDomain",
-    createDomain
+  // 슬라이스 생성 명령어 등록
+  const createSliceDisposable = vscode.commands.registerCommand(
+    "fsd-explorer.createDomain",
+    createSlice
   )
 
   // 설정 명령어 등록
   const openSettingsDisposable = vscode.commands.registerCommand(
-    "fsd-creator.openSettings",
+    "fsd-explorer.openSettings",
     async () => {
       await createSettingsWebview(context)
     }
   )
 
+  // FSD 익스플로러 등록
+  const workspaceRoot =
+    vscode.workspace.workspaceFolders &&
+    vscode.workspace.workspaceFolders.length > 0
+      ? vscode.workspace.workspaceFolders[0].uri.fsPath
+      : undefined
+
+  // 전역 변수에 할당
+  fsdExplorerInstance = new FSDExplorer(workspaceRoot)
+
+  const treeView = vscode.window.createTreeView("fsdExplorer", {
+    treeDataProvider: fsdExplorerInstance,
+    showCollapseAll: true,
+  })
+  fsdExplorerInstance.setTreeView(treeView)
+
+  // 리프레시 명령어 등록
+  const refreshExplorerDisposable = vscode.commands.registerCommand(
+    "fsd-explorer.refreshExplorer",
+    () => fsdExplorerInstance.refresh()
+  )
+
+  // 파일 시스템 명령어 등록
+  const createFileDisposable = vscode.commands.registerCommand(
+    "fsd-explorer.createFile",
+    createFile
+  )
+
+  const createFolderDisposable = vscode.commands.registerCommand(
+    "fsd-explorer.createFolder",
+    createFolder
+  )
+
+  const renameDisposable = vscode.commands.registerCommand(
+    "fsd-explorer.rename",
+    rename
+  )
+
+  const deleteDisposable = vscode.commands.registerCommand(
+    "fsd-explorer.delete",
+    deleteItem
+  )
+
+  // FSD 규칙 위반 파일 수정 명령어 등록
+  const fixFsdViolationDisposable = vscode.commands.registerCommand(
+    "fsd-explorer.fixViolation",
+    async (item: FSDItem) => {
+      if (item.violatesRules) {
+        // 파일 열기 (미리보기 모드가 아닌 완전히 열기)
+        const document = await vscode.workspace.openTextDocument(
+          item.resourceUri
+        )
+        await vscode.window.showTextDocument(document, { preview: false })
+
+        // 사용자에게 안내 메시지 표시
+        vscode.window.showInformationMessage(
+          getMessage("fixViolationInstructions")
+        )
+      }
+    }
+  )
+
+  // 규칙 위반 표시 명령어
+  const showViolationsDisposable = vscode.commands.registerCommand(
+    "fsd-explorer.showViolations",
+    async (item?: FSDItem) => {
+      // 프로그레스 바를 사용하여 작업 진행 상황 표시
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: getMessage("checkingViolations"),
+          cancellable: true,
+        },
+        async (progress, token) => {
+          // 모든 규칙 위반 파일 찾기
+          const violations: FSDItem[] = []
+
+          // 항상 전체 워크스페이스 검사
+          const searchPath = undefined // 항상 전체 검사
+
+          // 초기 진행 상태
+          progress.report({
+            increment: 0,
+            message: getMessage("preparingScan"),
+          })
+
+          try {
+            // 취소 토큰 전달하여 취소 가능하도록 설정
+            await fsdExplorerInstance.findViolations(
+              violations,
+              searchPath,
+              progress,
+              token
+            )
+
+            if (token.isCancellationRequested) {
+              vscode.window.showInformationMessage(getMessage("scanCanceled"))
+              return
+            }
+
+            // 검사 완료 메시지 표시
+            progress.report({
+              increment: 100,
+              message: getMessage("scanCompleted"),
+            })
+
+            // 잠시 대기하여 사용자가 완료 메시지를 볼 수 있게 함
+            await new Promise((resolve) => setTimeout(resolve, 500))
+
+            if (violations.length === 0) {
+              vscode.window.showInformationMessage(
+                getMessage("noViolationsFound")
+              )
+              return
+            }
+
+            // 위반 항목 목록 표시
+            const items = violations.map((v) => ({
+              label: path.basename(v.resourceUri.fsPath),
+              description: path.relative(
+                vscode.workspace.workspaceFolders?.[0].uri.fsPath || "",
+                v.resourceUri.fsPath
+              ),
+              item: v,
+            }))
+
+            const selected = await vscode.window.showQuickPick(items, {
+              placeHolder: getMessage("selectViolationFile"),
+              title: getMessage(
+                "violationsTitle",
+                violations.length.toString()
+              ),
+            })
+
+            if (selected) {
+              // 선택한 파일 열기
+              const document = await vscode.workspace.openTextDocument(
+                selected.item.resourceUri
+              )
+              await vscode.window.showTextDocument(document, { preview: false })
+            }
+          } catch (error) {
+            vscode.window.showErrorMessage(
+              getMessage(
+                "scanError",
+                error instanceof Error ? error.message : String(error)
+              )
+            )
+          }
+        }
+      )
+    }
+  )
+
+  // 확장 프로그램이 비활성화될 때 리소스 해제
   context.subscriptions.push(
     helloWorldDisposable,
     initFsdDisposable,
-    createDomainDisposable,
-    openSettingsDisposable
+    createSliceDisposable,
+    openSettingsDisposable,
+    refreshExplorerDisposable,
+    treeView,
+    { dispose: () => fsdExplorerInstance.dispose() },
+    createFileDisposable,
+    createFolderDisposable,
+    renameDisposable,
+    deleteDisposable,
+    fixFsdViolationDisposable,
+    openFileDisposable,
+    showViolationsDisposable
   )
 }
 
