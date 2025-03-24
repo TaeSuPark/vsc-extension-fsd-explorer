@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import * as fs from "fs"
 import * as path from "path"
+import { getMessage } from "./extension" // getMessage 함수 가져오기
 
 // FSD 트리 아이템 클래스
 export class FSDItem extends vscode.TreeItem {
@@ -34,12 +35,11 @@ export class FSDItem extends vscode.TreeItem {
     // 규칙 위반 시 스타일 변경
     if (violatesRules) {
       if (fs.lstatSync(this.resourceUri.fsPath).isDirectory()) {
-        this.description = "규칙 위반 포함"
-        this.tooltip =
-          "이 폴더는 FSD 아키텍처 규칙을 위반하는 파일을 포함합니다"
+        this.description = getMessage("folderContainsViolations")
+        this.tooltip = getMessage("folderViolationTooltip")
       } else {
-        this.description = "FSD 규칙 위반"
-        this.tooltip = "이 파일은 FSD 아키텍처 규칙을 위반합니다"
+        this.description = getMessage("fileViolation")
+        this.tooltip = getMessage("fileViolationTooltip")
       }
     }
   }
@@ -378,7 +378,7 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
             if (currentLayer === "shared") {
               if (importLayer !== "shared") {
                 console.log(
-                  `shared 레이어 규칙 위반: ${filePath} -> ${importPath}`
+                  getMessage("sharedLayerViolation", filePath, importPath)
                 )
                 return true
               }
@@ -390,7 +390,7 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
             if (importLayer in layerPriority && currentLayer in layerPriority) {
               // 규칙 위반 검사: 하위 계층이 상위 계층을 import하는 경우
               if (layerPriority[currentLayer] > layerPriority[importLayer]) {
-                console.log(`계층 규칙 위반: ${filePath} -> ${importPath}`)
+                console.log(getMessage("layerViolation", filePath, importPath))
                 return true
               }
 
@@ -402,7 +402,7 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
                 importParts[1] !== parts[1]
               ) {
                 console.log(
-                  `동일 계층 내 다른 슬라이스 import 위반: ${filePath} -> ${importPath}`
+                  getMessage("crossSliceViolation", filePath, importPath)
                 )
                 return true
               }
@@ -466,7 +466,7 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
             if (currentLayer === "shared") {
               if (importLayer !== "shared") {
                 console.log(
-                  `shared 레이어 별칭 규칙 위반: ${filePath} -> ${importPath}`
+                  getMessage("sharedLayerViolation", filePath, importPath)
                 )
                 return true
               }
@@ -478,7 +478,7 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
             if (importLayer in layerPriority && currentLayer in layerPriority) {
               // 규칙 위반 검사: 하위 계층이 상위 계층을 import하는 경우
               if (layerPriority[currentLayer] > layerPriority[importLayer]) {
-                console.log(`별칭 계층 규칙 위반: ${filePath} -> ${importPath}`)
+                console.log(getMessage("layerViolation", filePath, importPath))
                 return true
               }
 
@@ -490,7 +490,7 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
                 sliceName !== parts[1]
               ) {
                 console.log(
-                  `별칭 동일 계층 내 다른 슬라이스 import 위반: ${filePath} -> ${importPath}`
+                  getMessage("crossSliceViolation", filePath, importPath)
                 )
                 return true
               }
@@ -602,11 +602,11 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
 
     // 먼저 검사할 파일의 총 갯수를 대략적으로 계산
     if (progress) {
-      progress.report({ increment: 0, message: "파일 수 계산 중..." })
+      progress.report({ increment: 0, message: getMessage("countingFiles") })
       totalFiles = await this.countFiles(startPath, token)
       progress.report({
         increment: 5,
-        message: `총 ${totalFiles}개 파일 검사 예정`,
+        message: getMessage("planningToCheck", totalFiles.toString()),
       })
     }
 
@@ -741,7 +741,12 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
                 const increment = 95 / totalFiles // 95%를 파일 검사에 사용
                 progress.report({
                   increment: increment,
-                  message: `${processedFiles}/${totalFiles} 파일 검사 중... (${violations.length}개 위반 발견)`,
+                  message: getMessage(
+                    "checkingFile",
+                    processedFiles.toString(),
+                    totalFiles.toString(),
+                    violations.length.toString()
+                  ),
                 })
 
                 // UI 업데이트를 위한 약간의 지연
@@ -752,21 +757,25 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
         } catch (error) {
           // 개별 파일 처리 오류는 무시하고 계속 진행
           console.error(
-            `파일 처리 중 오류 (${path.join(dirPath, file)}):`,
+            getMessage("fileProcessingError", path.join(dirPath, file)),
             error
           )
         }
       }
     } catch (error) {
       // 디렉토리 처리 오류는 무시하고 계속 진행
-      console.error(`디렉토리 처리 중 오류 (${dirPath}):`, error)
+      console.error(getMessage("directoryProcessingError", dirPath), error)
     }
 
     // 모든 처리가 끝난 후 최종 상태 업데이트
     if (progress) {
       progress.report({
-        increment: 0, // 이미 100%에 가까워서 더 이상 increment는 불필요
-        message: `검사 완료: ${processedFiles}개 파일 검사, ${violations.length}개 위반 발견`,
+        increment: 0,
+        message: getMessage(
+          "scanComplete",
+          processedFiles.toString(),
+          violations.length.toString()
+        ),
       })
     }
 

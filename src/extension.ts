@@ -10,8 +10,8 @@ const messages = {
   en: {
     // 일반 메시지
     extensionActive:
-      'Congratulations, your extension "fsd-creator" is now active!',
-    noWorkspace: "FSD Creator: No open workspace found.",
+      'Congratulations, your extension "fsd-explorer" is now active!',
+    noWorkspace: "FSD Explorer: No open workspace found.",
     refreshExplorer: "workbench.files.action.refreshFilesExplorer",
 
     // FSD 초기화 관련
@@ -91,11 +91,38 @@ const messages = {
     nameRequired: "Name is required",
     invalidName: "Name cannot contain path separators",
     itemAlreadyExists: "An item with this name already exists",
+
+    // 규칙 위반 검사 관련 메시지
+    folderContainsViolations: "Contains Rule Violations",
+    folderViolationTooltip:
+      "This folder contains files that violate FSD architecture rules",
+    fileViolation: "FSD Rule Violation",
+    fileViolationTooltip: "This file violates FSD architecture rules",
+    sharedLayerViolation: "Shared layer rule violation: {0} -> {1}",
+    layerViolation: "Layer rule violation: {0} -> {1}",
+    crossSliceViolation:
+      "Cross-slice import violation within same layer: {0} -> {1}",
+    fileProcessingError: "Error processing file ({0}):",
+    directoryProcessingError: "Error processing directory ({0}):",
+    countingFiles: "Counting files...",
+    planningToCheck: "Planning to check {0} files",
+    scanComplete: "Scan complete: Examined {0} files, found {1} violations",
+    checkingFile: "Checking file {0}/{1}... ({2} violations found)",
+    checkingViolations: "Checking FSD Rule Violations...",
+    preparingScan: "Preparing scan...",
+    scanCanceled: "FSD rule violation check was canceled.",
+    scanCompleted: "Scan complete!",
+    noViolationsFound: "No FSD rule violations found.",
+    selectViolationFile: "Select a file with rule violations",
+    violationsTitle: "FSD Rule Violations ({0})",
+    scanError: "Error during scan: {0}",
+    fixViolationInstructions:
+      "FSD Rule Violation: Lower layers cannot import from higher layers. Please modify the file.",
   },
   ko: {
     // 일반 메시지
-    extensionActive: "FSD Creator 익스텐션이 활성화되었습니다!",
-    noWorkspace: "FSD Creator: 열린 워크스페이스가 없습니다.",
+    extensionActive: "FSD Explorer 익스텐션이 활성화되었습니다!",
+    noWorkspace: "FSD Explorer: 열린 워크스페이스가 없습니다.",
     refreshExplorer: "workbench.files.action.refreshFilesExplorer",
 
     // FSD 초기화 관련
@@ -175,6 +202,32 @@ const messages = {
     nameRequired: "이름은 필수입니다",
     invalidName: "이름에 경로 구분자를 포함할 수 없습니다",
     itemAlreadyExists: "이 이름의 항목이 이미 존재합니다",
+
+    // 규칙 위반 검사 관련 메시지
+    folderContainsViolations: "규칙 위반 포함",
+    folderViolationTooltip:
+      "이 폴더는 FSD 아키텍처 규칙을 위반하는 파일을 포함합니다",
+    fileViolation: "FSD 규칙 위반",
+    fileViolationTooltip: "이 파일은 FSD 아키텍처 규칙을 위반합니다",
+    sharedLayerViolation: "shared 레이어 규칙 위반: {0} -> {1}",
+    layerViolation: "계층 규칙 위반: {0} -> {1}",
+    crossSliceViolation: "동일 계층 내 다른 슬라이스 import 위반: {0} -> {1}",
+    fileProcessingError: "파일 처리 중 오류 ({0}):",
+    directoryProcessingError: "디렉토리 처리 중 오류 ({0}):",
+    countingFiles: "파일 수 계산 중...",
+    planningToCheck: "총 {0}개 파일 검사 예정",
+    scanComplete: "검사 완료: {0}개 파일 검사, {1}개 위반 발견",
+    checkingFile: "{0}/{1} 파일 검사 중... ({2}개 위반 발견)",
+    checkingViolations: "FSD 규칙 위반 검사 중...",
+    preparingScan: "검사 준비 중...",
+    scanCanceled: "FSD 규칙 위반 검사가 취소되었습니다.",
+    scanCompleted: "검사 완료!",
+    noViolationsFound: "FSD 규칙 위반이 없습니다.",
+    selectViolationFile: "규칙 위반 파일 선택",
+    violationsTitle: "FSD 규칙 위반 ({0}개)",
+    scanError: "검사 중 오류 발생: {0}",
+    fixViolationInstructions:
+      "FSD 규칙 위반: 하위 계층은 상위 계층을 import할 수 없습니다. 파일을 수정해주세요.",
   },
 }
 
@@ -185,12 +238,25 @@ function getCurrentLanguage(): "en" | "ko" {
   return language === "ko" ? "ko" : "en"
 }
 
-// 메시지 가져오기
-function getMessage<T extends keyof typeof messages.en>(
-  key: T
-): (typeof messages.en)[T] {
+// 메시지 가져오기 함수 (매개변수 대체 지원) - 내보내기도 함께 처리
+export function getMessage<T extends keyof typeof messages.en>(
+  key: T,
+  ...args: string[]
+): string {
   const lang = getCurrentLanguage()
-  return messages[lang][key] as (typeof messages.en)[T]
+  // message 변수가 항상 string 타입이 되도록 확실히 처리
+  const langMessages = messages[lang as keyof typeof messages]
+  const messageValue = langMessages[key] || messages.en[key] || String(key)
+
+  // 확실히 string 타입임을 보장
+  let message = String(messageValue)
+
+  // 매개변수 대체
+  args.forEach((arg, i) => {
+    message = message.replace(`{${i}}`, arg)
+  })
+
+  return message
 }
 
 // FSD 폴더 구조
@@ -1233,7 +1299,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         // 사용자에게 안내 메시지 표시
         vscode.window.showInformationMessage(
-          `FSD 규칙 위반: 하위 계층은 상위 계층을 import할 수 없습니다. 파일을 수정해주세요.`
+          getMessage("fixViolationInstructions")
         )
       }
     }
@@ -1247,7 +1313,7 @@ export function activate(context: vscode.ExtensionContext) {
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: "FSD 규칙 위반 검사 중...",
+          title: getMessage("checkingViolations"),
           cancellable: true,
         },
         async (progress, token) => {
@@ -1258,7 +1324,10 @@ export function activate(context: vscode.ExtensionContext) {
           const searchPath = undefined // 항상 전체 검사
 
           // 초기 진행 상태
-          progress.report({ increment: 0, message: "검사 준비 중..." })
+          progress.report({
+            increment: 0,
+            message: getMessage("preparingScan"),
+          })
 
           try {
             // 취소 토큰 전달하여 취소 가능하도록 설정
@@ -1270,23 +1339,23 @@ export function activate(context: vscode.ExtensionContext) {
             )
 
             if (token.isCancellationRequested) {
-              vscode.window.showInformationMessage(
-                "FSD 규칙 위반 검사가 취소되었습니다."
-              )
+              vscode.window.showInformationMessage(getMessage("scanCanceled"))
               return
             }
 
             // 검사 완료 메시지 표시
             progress.report({
               increment: 100,
-              message: "검사 완료!",
+              message: getMessage("scanCompleted"),
             })
 
             // 잠시 대기하여 사용자가 완료 메시지를 볼 수 있게 함
             await new Promise((resolve) => setTimeout(resolve, 500))
 
             if (violations.length === 0) {
-              vscode.window.showInformationMessage("FSD 규칙 위반이 없습니다.")
+              vscode.window.showInformationMessage(
+                getMessage("noViolationsFound")
+              )
               return
             }
 
@@ -1301,8 +1370,11 @@ export function activate(context: vscode.ExtensionContext) {
             }))
 
             const selected = await vscode.window.showQuickPick(items, {
-              placeHolder: "규칙 위반 파일 선택",
-              title: `FSD 규칙 위반 (${violations.length}개)`,
+              placeHolder: getMessage("selectViolationFile"),
+              title: getMessage(
+                "violationsTitle",
+                violations.length.toString()
+              ),
             })
 
             if (selected) {
@@ -1313,7 +1385,12 @@ export function activate(context: vscode.ExtensionContext) {
               await vscode.window.showTextDocument(document, { preview: false })
             }
           } catch (error) {
-            vscode.window.showErrorMessage(`검사 중 오류 발생: ${error}`)
+            vscode.window.showErrorMessage(
+              getMessage(
+                "scanError",
+                error instanceof Error ? error.message : String(error)
+              )
+            )
           }
         }
       )
