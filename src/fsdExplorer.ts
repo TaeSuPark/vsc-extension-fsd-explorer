@@ -583,53 +583,169 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
     return items
   }
 
-  // 규칙 위반 항목 찾기
-  public findViolations(violations: FSDItem[], searchPath?: string): void {
+  // 규칙 위반 항목 찾기 (진행 상태 표시 및 취소 가능하도록 개선)
+  public async findViolations(
+    violations: FSDItem[],
+    searchPath?: string,
+    progress?: vscode.Progress<{ increment: number; message: string }>,
+    token?: vscode.CancellationToken
+  ): Promise<void> {
     // 검색 시작 경로 설정
     const startPath = searchPath || this.workspaceRoot
     if (!startPath || !fs.existsSync(startPath)) {
       return
     }
 
-    // 파일 시스템 직접 스캔
-    this.scanForViolations(startPath, violations)
+    // 총 파일 수를 미리 계산하여 진행률 표시에 사용
+    let totalFiles = 0
+    let processedFiles = 0
+
+    // 먼저 검사할 파일의 총 갯수를 대략적으로 계산
+    if (progress) {
+      progress.report({ increment: 0, message: "파일 수 계산 중..." })
+      totalFiles = await this.countFiles(startPath, token)
+      progress.report({
+        increment: 5,
+        message: `총 ${totalFiles}개 파일 검사 예정`,
+      })
+    }
+
+    // 파일 시스템 직접 스캔 (비동기로 변경)
+    await this.scanForViolations(
+      startPath,
+      violations,
+      progress,
+      token,
+      totalFiles,
+      processedFiles
+    )
   }
 
-  // 파일 시스템 직접 스캔하여 위반 항목 찾기
-  private scanForViolations(dirPath: string, violations: FSDItem[]): void {
+  // 파일 개수 계산 (진행 상황 추정을 위해)
+  private async countFiles(
+    dirPath: string,
+    token?: vscode.CancellationToken
+  ): Promise<number> {
+    if (token?.isCancellationRequested) {
+      return 0
+    }
+
     try {
+      let count = 0
       const files = fs.readdirSync(dirPath)
 
       for (const file of files) {
+        if (token?.isCancellationRequested) {
+          return count
+        }
+
         try {
           const filePath = path.join(dirPath, file)
           const stat = fs.statSync(filePath)
 
           if (stat.isDirectory()) {
-            // 디렉토리인 경우 재귀적으로 스캔
-            this.scanForViolations(filePath, violations)
+            // node_modules 및 숨김 폴더 무시
+            if (file === "node_modules" || file.startsWith(".")) {
+              continue
+            }
+            // 디렉토리인 경우 재귀적으로 계산
+            count += await this.countFiles(filePath, token)
           } else {
-            // 파일인 경우 규칙 위반 검사
-            const violatesRules = this.checkFSDRuleViolation(filePath)
+            // 특정 확장자만 카운트 (성능 향상)
+            const ext = path.extname(file).toLowerCase()
+            if ([".ts", ".tsx", ".js", ".jsx"].includes(ext)) {
+              count++
+            }
+          }
+        } catch (error) {
+          // 개별 파일 처리 오류는 무시
+        }
+      }
+      return count
+    } catch (error) {
+      return 0
+    }
+  }
 
-            if (violatesRules) {
-              // 맵에 이미 있는 항목 사용 또는 새 항목 생성
-              const uri = vscode.Uri.file(filePath)
-              const existingItem = this.itemsMap.get(filePath)
+  // 파일 시스템 직접 스캔하여 위반 항목 찾기 (비동기 및 진행 상태 표시)
+  private async scanForViolations(
+    dirPath: string,
+    violations: FSDItem[],
+    progress?: vscode.Progress<{ increment: number; message: string }>,
+    token?: vscode.CancellationToken,
+    totalFiles: number = 0,
+    processedFiles: number = 0
+  ): Promise<number> {
+    if (token?.isCancellationRequested) {
+      return processedFiles
+    }
 
-              if (existingItem) {
-                violations.push(existingItem)
-              } else {
-                // 새 항목 생성
-                const fileName = path.basename(filePath)
-                const newItem = new FSDItem(
-                  fileName,
-                  vscode.TreeItemCollapsibleState.None,
-                  uri,
-                  undefined,
-                  true
-                )
-                violations.push(newItem)
+    try {
+      const files = fs.readdirSync(dirPath)
+
+      for (const file of files) {
+        if (token?.isCancellationRequested) {
+          return processedFiles
+        }
+
+        try {
+          const filePath = path.join(dirPath, file)
+          const stat = fs.statSync(filePath)
+
+          if (stat.isDirectory()) {
+            // node_modules 및 숨김 폴더 무시
+            if (file === "node_modules" || file.startsWith(".")) {
+              continue
+            }
+            // 디렉토리인 경우 재귀적으로 스캔
+            processedFiles = await this.scanForViolations(
+              filePath,
+              violations,
+              progress,
+              token,
+              totalFiles,
+              processedFiles
+            )
+          } else {
+            // 특정 확장자만 검사 (성능 향상)
+            const ext = path.extname(file).toLowerCase()
+            if ([".ts", ".tsx", ".js", ".jsx"].includes(ext)) {
+              // 파일인 경우 규칙 위반 검사
+              const violatesRules = this.checkFSDRuleViolation(filePath)
+
+              if (violatesRules) {
+                // 맵에 이미 있는 항목 사용 또는 새 항목 생성
+                const uri = vscode.Uri.file(filePath)
+                const existingItem = this.itemsMap.get(filePath)
+
+                if (existingItem) {
+                  violations.push(existingItem)
+                } else {
+                  // 새 항목 생성
+                  const fileName = path.basename(filePath)
+                  const newItem = new FSDItem(
+                    fileName,
+                    vscode.TreeItemCollapsibleState.None,
+                    uri,
+                    undefined,
+                    true
+                  )
+                  violations.push(newItem)
+                }
+              }
+
+              // 진행 상태 업데이트
+              processedFiles++
+
+              if (progress && totalFiles > 0) {
+                const increment = 95 / totalFiles // 95%를 파일 검사에 사용
+                progress.report({
+                  increment: increment,
+                  message: `${processedFiles}/${totalFiles} 파일 검사 중... (${violations.length}개 위반 발견)`,
+                })
+
+                // UI 업데이트를 위한 약간의 지연
+                await new Promise((resolve) => setTimeout(resolve, 0))
               }
             }
           }
@@ -645,5 +761,7 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
       // 디렉토리 처리 오류는 무시하고 계속 진행
       console.error(`디렉토리 처리 중 오류 (${dirPath}):`, error)
     }
+
+    return processedFiles
   }
 }

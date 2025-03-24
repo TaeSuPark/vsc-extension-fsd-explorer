@@ -1243,42 +1243,71 @@ export function activate(context: vscode.ExtensionContext) {
   const showViolationsDisposable = vscode.commands.registerCommand(
     "fsd-creator.showViolations",
     async (item?: FSDItem) => {
-      // 모든 규칙 위반 파일 찾기
-      const violations: FSDItem[] = []
+      // 프로그레스 바를 사용하여 작업 진행 상황 표시
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: "FSD 규칙 위반 검사 중...",
+          cancellable: true,
+        },
+        async (progress, token) => {
+          // 모든 규칙 위반 파일 찾기
+          const violations: FSDItem[] = []
 
-      // 항상 전체 워크스페이스 검사
-      const searchPath = undefined // 항상 전체 검사
+          // 항상 전체 워크스페이스 검사
+          const searchPath = undefined // 항상 전체 검사
 
-      // 전역 변수 사용
-      fsdExplorerInstance.findViolations(violations, searchPath)
+          // 초기 진행 상태
+          progress.report({ increment: 0, message: "검사 준비 중..." })
 
-      if (violations.length === 0) {
-        vscode.window.showInformationMessage("FSD 규칙 위반이 없습니다.")
-        return
-      }
+          try {
+            // 취소 토큰 전달하여 취소 가능하도록 설정
+            await fsdExplorerInstance.findViolations(
+              violations,
+              searchPath,
+              progress,
+              token
+            )
 
-      // 위반 항목 목록 표시
-      const items = violations.map((v) => ({
-        label: path.basename(v.resourceUri.fsPath),
-        description: path.relative(
-          vscode.workspace.workspaceFolders?.[0].uri.fsPath || "",
-          v.resourceUri.fsPath
-        ),
-        item: v,
-      }))
+            if (token.isCancellationRequested) {
+              vscode.window.showInformationMessage(
+                "FSD 규칙 위반 검사가 취소되었습니다."
+              )
+              return
+            }
 
-      const selected = await vscode.window.showQuickPick(items, {
-        placeHolder: "규칙 위반 파일 선택",
-        title: `FSD 규칙 위반 (${violations.length}개)`,
-      })
+            if (violations.length === 0) {
+              vscode.window.showInformationMessage("FSD 규칙 위반이 없습니다.")
+              return
+            }
 
-      if (selected) {
-        // 선택한 파일 열기
-        const document = await vscode.workspace.openTextDocument(
-          selected.item.resourceUri
-        )
-        await vscode.window.showTextDocument(document, { preview: false })
-      }
+            // 위반 항목 목록 표시
+            const items = violations.map((v) => ({
+              label: path.basename(v.resourceUri.fsPath),
+              description: path.relative(
+                vscode.workspace.workspaceFolders?.[0].uri.fsPath || "",
+                v.resourceUri.fsPath
+              ),
+              item: v,
+            }))
+
+            const selected = await vscode.window.showQuickPick(items, {
+              placeHolder: "규칙 위반 파일 선택",
+              title: `FSD 규칙 위반 (${violations.length}개)`,
+            })
+
+            if (selected) {
+              // 선택한 파일 열기
+              const document = await vscode.workspace.openTextDocument(
+                selected.item.resourceUri
+              )
+              await vscode.window.showTextDocument(document, { preview: false })
+            }
+          } catch (error) {
+            vscode.window.showErrorMessage(`검사 중 오류 발생: ${error}`)
+          }
+        }
+      )
     }
   )
 
