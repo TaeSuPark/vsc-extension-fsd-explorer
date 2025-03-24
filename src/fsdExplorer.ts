@@ -4,23 +4,28 @@ import * as path from "path"
 
 // FSD 트리 아이템 클래스
 export class FSDItem extends vscode.TreeItem {
+  public violatesRules: boolean // public으로 변경하여 외부에서 수정 가능
+
   constructor(
     public readonly label: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly resourceUri: vscode.Uri,
     public readonly parent?: FSDItem,
-    public readonly violatesRules: boolean = false // 규칙 위반 여부 추가
+    violatesRules: boolean = false // 규칙 위반 여부
   ) {
     super(label, collapsibleState)
+    this.violatesRules = violatesRules
     this.tooltip = resourceUri.fsPath
     this.resourceUri = resourceUri // 리소스 URI 설정 (VS Code가 자동으로 현재 파일 강조에 사용)
 
     // 파일 또는 폴더 여부 설정
     if (this.resourceUri) {
       if (fs.lstatSync(this.resourceUri.fsPath).isDirectory()) {
+        // 폴더의 경우 규칙 위반이 있으면 경고 아이콘 표시
         this.iconPath = new vscode.ThemeIcon("folder")
-        this.contextValue = "folder"
+        this.contextValue = violatesRules ? "folderWithViolation" : "folder"
       } else {
+        // 파일의 경우 규칙 위반이 있으면 경고 아이콘 표시
         this.iconPath = new vscode.ThemeIcon(violatesRules ? "warning" : "file")
         this.contextValue = violatesRules ? "fsdViolation" : "file"
       }
@@ -28,8 +33,14 @@ export class FSDItem extends vscode.TreeItem {
 
     // 규칙 위반 시 스타일 변경
     if (violatesRules) {
-      this.description = "FSD 규칙 위반"
-      this.tooltip = "이 파일은 FSD 아키텍처 규칙을 위반합니다"
+      if (fs.lstatSync(this.resourceUri.fsPath).isDirectory()) {
+        this.description = "규칙 위반 포함"
+        this.tooltip =
+          "이 폴더는 FSD 아키텍처 규칙을 위반하는 파일을 포함합니다"
+      } else {
+        this.description = "FSD 규칙 위반"
+        this.tooltip = "이 파일은 FSD 아키텍처 규칙을 위반합니다"
+      }
     }
   }
 }
@@ -497,37 +508,76 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
   // 폴더 내용 가져오기 함수 수정
   private async getFolderContents(
     folderPath: string,
-    parent: FSDItem
+    parent?: FSDItem
   ): Promise<FSDItem[]> {
     if (!fs.existsSync(folderPath)) {
       return []
     }
 
-    const items: FSDItem[] = []
+    // 폴더 내용 읽기
     const files = fs.readdirSync(folderPath)
+    const items: FSDItem[] = []
+    let containsViolation = false // 폴더 내 규칙 위반 파일 존재 여부
 
+    // 각 파일/폴더 처리
     for (const file of files) {
       const filePath = path.join(folderPath, file)
       const stat = fs.statSync(filePath)
       const uri = vscode.Uri.file(filePath)
 
-      // 규칙 위반 검사 (파일인 경우만)
-      const violatesRules =
-        !stat.isDirectory() && this.checkFSDRuleViolation(filePath)
+      if (stat.isDirectory()) {
+        // 하위 폴더 내용 재귀적으로 가져오기
+        const childItems = await this.getFolderContents(filePath, undefined)
 
-      const collapsibleState = stat.isDirectory()
-        ? vscode.TreeItemCollapsibleState.Collapsed
-        : vscode.TreeItemCollapsibleState.None
+        // 하위 폴더에 규칙 위반이 있는지 확인
+        const hasViolationInChildren = childItems.some(
+          (item) => item.violatesRules
+        )
 
-      const item = new FSDItem(
-        file,
-        collapsibleState,
-        uri,
-        parent,
-        violatesRules
-      )
-      items.push(item)
-      this.itemsMap.set(filePath, item)
+        // 폴더 아이템 생성
+        const folderItem = new FSDItem(
+          file,
+          vscode.TreeItemCollapsibleState.Collapsed,
+          uri,
+          parent,
+          hasViolationInChildren // 하위에 규칙 위반이 있으면 부모도 표시
+        )
+
+        // 맵에 저장
+        this.itemsMap.set(filePath, folderItem)
+        items.push(folderItem)
+
+        // 현재 폴더에 규칙 위반 포함 여부 업데이트
+        if (hasViolationInChildren) {
+          containsViolation = true
+        }
+      } else {
+        // 파일 규칙 위반 확인
+        const violatesRules = this.checkFSDRuleViolation(filePath)
+
+        // 파일 아이템 생성
+        const fileItem = new FSDItem(
+          file,
+          vscode.TreeItemCollapsibleState.None,
+          uri,
+          parent,
+          violatesRules
+        )
+
+        // 맵에 저장
+        this.itemsMap.set(filePath, fileItem)
+        items.push(fileItem)
+
+        // 현재 폴더에 규칙 위반 포함 여부 업데이트
+        if (violatesRules) {
+          containsViolation = true
+        }
+      }
+    }
+
+    // 부모 폴더가 있고 현재 폴더에 규칙 위반이 있으면 부모 표시 업데이트
+    if (parent && containsViolation) {
+      parent.violatesRules = true
     }
 
     return items
