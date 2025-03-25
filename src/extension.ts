@@ -543,6 +543,26 @@ async function createSlice(): Promise<void> {
       if (layerConfig.ui) {
         const uiPath = path.join(slicePath, "ui")
         await createFolderIfNotExists(uiPath)
+
+        // pages 레이어에서 컴포넌트 생성 (ui 폴더가 있을 때만)
+        if (layer === "pages" && layerConfig.createComponent) {
+          // 컴포넌트 이름 생성 (PascalCase)
+          const componentName = sliceName
+            .split("-")
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join("")
+
+          const componentFilePath = path.join(uiPath, `${componentName}.tsx`)
+
+          // 컴포넌트 기본 내용 생성
+          const componentContent = `\nexport const ${componentName} = () => {\n  return (\n    <>\n      <h1>${componentName} ${getMessage(
+            "componentPage"
+          )}</h1>\n      {/* ${getMessage(
+            "addComponentContent"
+          )} */}\n    </>\n  );\n};\n`
+
+          await createFileIfNotExists(componentFilePath, componentContent)
+        }
       }
 
       // lib 폴더 생성
@@ -561,27 +581,6 @@ async function createSlice(): Promise<void> {
       if (layerConfig.consts) {
         const constsPath = path.join(slicePath, "consts")
         await createFolderIfNotExists(constsPath)
-      }
-
-      // pages 레이어에서 컴포넌트 생성
-      if (layer === "pages" && layerConfig.createComponent) {
-        // 컴포넌트 이름 생성 (PascalCase)
-        const componentName = sliceName
-          .split("-")
-          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-          .join("")
-
-        // 컴포넌트 파일 경로
-        const componentFilePath = path.join(slicePath, `${componentName}.tsx`)
-
-        // 컴포넌트 기본 내용 생성
-        const componentContent = `\nexport const ${componentName} = () => {\n  return (\n    <>\n      <h1>${componentName} ${getMessage(
-          "componentPage"
-        )}</h1>\n      {/* ${getMessage(
-          "addComponentContent"
-        )} */}\n    </>\n  );\n};\n`
-
-        await createFileIfNotExists(componentFilePath, componentContent)
       }
 
       // index.ts 파일 생성

@@ -2,6 +2,13 @@
 
 ## English
 
+### [0.0.2] - 2024-03-24 - Bug Fix
+
+#### Fixed
+
+- Fixed a bug where page components were created in the slice root instead of the ui folder
+- Components are now only created when ui folder option is enabled
+
 ### [0.0.1] - 2024-03-24 - Initial Release
 
 #### Added
@@ -21,6 +28,13 @@
 ---
 
 ## 한글
+
+### [0.0.2] - 2024-03-24 - 버그 수정
+
+#### 수정됨
+
+- 페이지 컴포넌트가 ui 폴더가 아닌 슬라이스 루트에 생성되는 버그 수정
+- ui 폴더 옵션이 활성화된 경우에만 컴포넌트가 생성되도록 수정
 
 ### [0.0.1] - 2024-03-24 - 최초 릴리즈
 
