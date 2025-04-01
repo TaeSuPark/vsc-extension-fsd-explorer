@@ -2,6 +2,13 @@
 
 ## English
 
+### [0.0.3] - 2024-03-25 - Bug Fix
+
+#### Fixed
+
+- Fixed a bug where Git diff viewer was not working properly due to file focusing issues
+- Improved Git diff viewer detection using `visibleTextEditors` API
+
 ### [0.0.2] - 2024-03-24 - Bug Fix
 
 #### Fixed
@@ -28,6 +35,13 @@
 ---
 
 ## 한글
+
+### [0.0.3] - 2024-03-25 - 버그 수정
+
+#### 수정됨
+
+- Git diff 뷰어 사용 시 파일 포커싱으로 인한 비교 기능 동작 오류 수정
+- `visibleTextEditors` API를 사용하여 Git diff 뷰어 감지 방식 개선
 
 ### [0.0.2] - 2024-03-24 - 버그 수정
 

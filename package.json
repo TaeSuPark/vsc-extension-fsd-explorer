@@ -2,7 +2,7 @@
   "name": "fsd-explorer",
   "displayName": "FSD Explorer",
   "description": "Explorer for creating and inspecting FSD architecture structure",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "TaeSuPark",
   "repository": {
     "type": "git",
