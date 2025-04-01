@@ -62,14 +62,32 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
   private itemsMap = new Map<string, FSDItem>()
 
   constructor(private workspaceRoot: string | undefined) {
-    // 현재 활성화된 편집기 변경 이벤트 구독
     this.activeEditorDisposable = vscode.window.onDidChangeActiveTextEditor(
       (editor) => {
         if (editor) {
+          // 현재 열려있는 모든 에디터 확인
+          const allEditors = vscode.window.visibleTextEditors
+          const hasGitDiffViewer = allEditors.some(
+            (e) => e.document.uri.scheme === "git"
+          )
+
+          console.log("Editor state:", {
+            hasGitDiffViewer,
+            activeEditorScheme: editor.document.uri.scheme,
+            allEditors: allEditors.map((e) => ({
+              scheme: e.document.uri.scheme,
+              fileName: e.document.fileName,
+            })),
+          })
+
+          // Git diff 뷰어가 열려있으면 파일 reveal 건너뛰기
+          if (hasGitDiffViewer) {
+            console.log("Git diff viewer is open, skipping file reveal")
+            return
+          }
+
           this.currentlyOpenTabFilePath = editor.document.uri.fsPath
           this.refresh()
-
-          // 현재 열린 파일에 해당하는 트리 항목 찾아서 표시
           this.revealActiveFile(editor.document.uri)
         }
       }
@@ -96,11 +114,16 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
           selectedItem.contextValue === "file" ||
           selectedItem.contextValue === "fsdViolation"
         ) {
-          // 미리보기 모드가 아닌 완전히 열기 위해 preview: false 옵션 사용
+          // Git diff 뷰어가 열려있으면 파일 열기 기능 비활성화
+          const activeEditor = vscode.window.activeTextEditor
+          if (activeEditor && activeEditor.document.uri.scheme === "git") {
+            return
+          }
+
           const document = await vscode.workspace.openTextDocument(
             selectedItem.resourceUri
           )
-          await vscode.window.showTextDocument(document, { preview: false })
+          await vscode.window.showTextDocument(document)
         }
       }
     })
@@ -118,10 +141,30 @@ export class FSDExplorer implements vscode.TreeDataProvider<FSDItem> {
     }
 
     try {
+      console.log("Revealing active file:", {
+        uri: uri.toString(),
+        scheme: uri.scheme,
+        fileName: uri.fsPath,
+      })
+
+      // Git diff 뷰어인지 다시 한번 확인
+      const activeEditor = vscode.window.activeTextEditor
+      if (activeEditor) {
+        const isGitDiffViewer =
+          activeEditor.document.fileName.includes("(Working Tree)") ||
+          activeEditor.document.fileName.includes("(Index)")
+
+        if (isGitDiffViewer) {
+          console.log("Git diff viewer detected in revealActiveFile, skipping")
+          return
+        }
+      }
+
       // 파일 경로가 워크스페이스 내에 있는지 확인
       const relativePath = path.relative(this.workspaceRoot, uri.fsPath)
       if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
-        return // 워크스페이스 외부 파일은 무시
+        console.log("File is outside workspace, skipping")
+        return
       }
 
       // src 폴더 확인
